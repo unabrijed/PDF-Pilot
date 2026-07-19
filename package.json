@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "check": "node scripts/check.mjs",
     "verify": "npm run check && npm run build",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "(git config core.hooksPath .githooks || true) && node scripts/sync-ocr-assets.mjs"
   },
   "dependencies": {
     "@neslinesli93/qpdf-wasm": "^0.3.0",
@@ -25,6 +25,7 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

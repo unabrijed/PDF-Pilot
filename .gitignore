@@ -1,5 +1,7 @@
 node_modules
 dist
+public/tesseract
+public/tessdata
 *.local
 .DS_Store
 *.tsbuildinfo

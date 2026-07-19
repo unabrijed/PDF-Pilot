@@ -135,6 +135,15 @@ const comp = await qpdfRun({ "in.pdf": sample }, ["--object-streams=generate", "
 assert.ok(ok(comp.rc) && comp.out?.length, `compress failed rc=${comp.rc}`);
 console.log("✓ qpdf compress OK.");
 
+// OCR self-hosted assets (synced from node_modules by scripts/sync-ocr-assets.mjs via npm prepare)
+const { statSync } = await import("node:fs");
+for (const f of ["public/tessdata/eng.traineddata.gz", "public/tesseract/tesseract-core-simd-lstm.wasm", "public/tesseract/tesseract-core-simd-lstm.wasm.js"]) {
+  let size = 0;
+  try { size = statSync(f).size; } catch { /* missing */ }
+  assert.ok(size > 1e6, `${f} missing or truncated — run: node scripts/sync-ocr-assets.mjs`);
+}
+console.log("✓ OCR self-hosted assets present.");
+
 // ---- zip (fflate) ----
 const { zipSync, unzipSync } = await import("fflate");
 const payload = new Uint8Array([1, 2, 3, 4, 5]);

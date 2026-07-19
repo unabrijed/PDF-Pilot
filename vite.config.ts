@@ -18,6 +18,16 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,mjs,css,html,svg,wasm}"], // mjs: the pdf.js worker asset
+        // The self-hosted OCR engine (~12MB) is cached on first OCR use instead of
+        // being precached for every visitor.
+        globIgnores: ["tesseract/**", "tessdata/**"],
+        runtimeCaching: [
+          {
+            urlPattern: /\/(tesseract|tessdata)\//,
+            handler: "CacheFirst",
+            options: { cacheName: "ocr-assets", expiration: { maxEntries: 8 } },
+          },
+        ],
         // qpdf.wasm (~1.3MB) and the pdf.js chunk (~1.7MB) must precache for offline.
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },

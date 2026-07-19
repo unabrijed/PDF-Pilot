@@ -1,4 +1,5 @@
-import { createWorker } from "tesseract.js";
+import { createWorker, OEM } from "tesseract.js";
+import tessWorkerUrl from "tesseract.js/dist/worker.min.js?url";
 import FileStaging from "../../components/FileStaging";
 import ResultsActions from "../../components/ResultsActions";
 import { overlayTextLayer, type OcrWord } from "../../lib/pdf";
@@ -11,7 +12,12 @@ const SCALE = 2; // 144dpi render for recognition
 export default function Ocr() {
   const { files, running, progress, error, outputs, start } = useToolRun(
     async (files, read, setProgress, fail) => {
-      const worker = await createWorker("eng");
+      // All engine assets are self-hosted (synced to public/ by the prepare script).
+      const worker = await createWorker("eng", OEM.LSTM_ONLY, {
+        workerPath: tessWorkerUrl,
+        corePath: "/tesseract/",
+        langPath: "/tessdata",
+      });
       const out = [];
       try {
         for (let i = 0; i < files.length; i++) {
@@ -47,7 +53,7 @@ export default function Ocr() {
       <h1>🔎 OCR PDF</h1>
       <p className="tool-sub">
         Add an invisible, searchable text layer to scanned pages (English).
-        The OCR engine (~15 MB) downloads on first use — your files still never leave your device.
+        The OCR engine ships with the app — everything runs on your device, even offline.
       </p>
       <FileStaging accepts="pdf" />
       <button className="primary" disabled={!files.length || running} onClick={start}>
