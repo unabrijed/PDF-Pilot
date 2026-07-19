@@ -139,6 +139,15 @@ export async function stampSignature(
   return doc.save();
 }
 
+/** Rebuild a PDF keeping only the pages in `order` (0-based indices), in that order. */
+export async function rebuildPdf(bytes: Uint8Array, order: number[]): Promise<Uint8Array> {
+  if (!order.length) throw new Error("Keep at least one page.");
+  const src = await PDFDocument.load(bytes);
+  const out = await PDFDocument.create();
+  (await out.copyPages(src, order)).forEach((p) => out.addPage(p));
+  return out.save();
+}
+
 /**
  * Salvage a damaged PDF by re-parsing it leniently and re-serializing.
  * pdf-lib scans objects sequentially instead of trusting the xref, so this

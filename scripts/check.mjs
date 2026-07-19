@@ -70,7 +70,7 @@ const { PDFDocument } = await import("pdf-lib");
 const { stem } = await import("../src/lib/names.ts");
 assert.equal(stem("report.final.pdf"), "report.final", "stem strips last extension");
 assert.equal(stem("noext"), "noext", "stem leaves extensionless names");
-const { mergePdfs, rotatePdf, extractPages, explodePdf, parseRanges, imagesToPdf, watermarkPdf, addPageNumbers, stampSignature } = await import("../src/lib/pdf.ts");
+const { mergePdfs, rotatePdf, extractPages, explodePdf, parseRanges, imagesToPdf, watermarkPdf, addPageNumbers, stampSignature, rebuildPdf } = await import("../src/lib/pdf.ts");
 const pages = async (n) => { const d = await PDFDocument.create(); for (let i = 0; i < n; i++) d.addPage(); return d.save(); };
 
 assert.equal((await PDFDocument.load(await mergePdfs([await pages(1), await pages(1)]))).getPageCount(), 2, "merge → 2 pages");
@@ -86,7 +86,14 @@ assert.equal((await PDFDocument.load(await imagesToPdf([{ name: "a.png", bytes: 
 assert.equal((await PDFDocument.load(await watermarkPdf(await pages(1), "DRAFT", 0.3))).getPageCount(), 1, "watermark keeps page count");
 assert.equal((await PDFDocument.load(await addPageNumbers(three, { position: "bottom-right", format: "n/N" }))).getPageCount(), 3, "page numbers keep page count");
 assert.equal((await PDFDocument.load(await stampSignature(await pages(1), png, { where: "last" }))).getPageCount(), 1, "signature keeps page count");
-console.log("✓ pdf-lib tools OK: merge / rotate / split / images / watermark / page-numbers / sign.");
+// organize: pages sized 100/200/300 so the result proves both order and deletion
+const sized = await (async () => { const d = await PDFDocument.create(); for (const w of [100, 200, 300]) d.addPage([w, w]); return d.save(); })();
+const rb = await PDFDocument.load(await rebuildPdf(sized, [2, 0]));
+assert.equal(rb.getPageCount(), 2, "rebuild [2,0] → 2 pages");
+assert.equal(Math.round(rb.getPage(0).getWidth()), 300, "rebuild puts page 3 first");
+assert.equal(Math.round(rb.getPage(1).getWidth()), 100, "rebuild puts page 1 second");
+await assert.rejects(() => rebuildPdf(sized, []), "rebuild with no pages rejects");
+console.log("✓ pdf-lib tools OK: merge / rotate / split / images / watermark / page-numbers / sign / organize.");
 
 // repair, engine 1 (qpdf rewrite): junk before %PDF shifts every xref offset — qpdf re-anchors
 const shifted = new Uint8Array(Buffer.concat([Buffer.from("GARBAGE-HEADER\n"), sample]));
