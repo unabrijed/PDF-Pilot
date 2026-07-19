@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useRef } from "react";
 
 export interface SignaturePadHandle {
   toPng: () => Uint8Array | null; // null if nothing drawn
+  toDataUrl: () => string | null;
 }
 
 /** A small canvas you draw a signature on (mouse/touch). Transparent background. */
@@ -20,6 +21,10 @@ const SignaturePad = forwardRef<SignaturePadHandle, { onInk: (has: boolean) => v
         const arr = new Uint8Array(bin.length);
         for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
         return arr;
+      },
+      toDataUrl: () => {
+        const c = canvasRef.current;
+        return c && dirty.current ? c.toDataURL("image/png") : null;
       },
     }));
 
@@ -52,7 +57,11 @@ const SignaturePad = forwardRef<SignaturePadHandle, { onInk: (has: boolean) => v
       if (!dirty.current) { dirty.current = true; onInk(true); }
     }
 
-    function up() { drawing.current = false; }
+    // Re-notify after every stroke so listeners can refresh a live preview.
+    function up() {
+      drawing.current = false;
+      if (dirty.current) onInk(true);
+    }
 
     function clear() {
       const c = canvasRef.current!;

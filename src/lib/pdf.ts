@@ -117,11 +117,15 @@ export async function addPageNumbers(
   return doc.save();
 }
 
-/** Stamp a PNG signature at the bottom-right of the chosen page(s). */
+/**
+ * Stamp a PNG signature on the chosen page(s).
+ * `pos` = the signature's centre as fractions of the page (y from the top);
+ * omitted → bottom-right with a 36pt margin.
+ */
 export async function stampSignature(
   pdfBytes: Uint8Array,
   pngBytes: Uint8Array,
-  opts: { where?: "first" | "last" | "all"; widthFrac?: number } = {}
+  opts: { where?: "first" | "last" | "all"; widthFrac?: number; pos?: { xFrac: number; yFrac: number } } = {}
 ): Promise<Uint8Array> {
   const where = opts.where ?? "last";
   const widthFrac = opts.widthFrac ?? 0.28;
@@ -131,10 +135,12 @@ export async function stampSignature(
   const targets = where === "all" ? pages : where === "first" ? [pages[0]] : [pages[pages.length - 1]];
   const margin = 36;
   for (const page of targets) {
-    const { width } = page.getSize();
+    const { width, height } = page.getSize();
     const w = width * widthFrac;
     const h = (png.height / png.width) * w;
-    page.drawImage(png, { x: width - margin - w, y: margin, width: w, height: h });
+    const x = opts.pos ? opts.pos.xFrac * width - w / 2 : width - margin - w;
+    const y = opts.pos ? (1 - opts.pos.yFrac) * height - h / 2 : margin;
+    page.drawImage(png, { x, y, width: w, height: h });
   }
   return doc.save();
 }

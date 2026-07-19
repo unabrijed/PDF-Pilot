@@ -86,6 +86,7 @@ assert.equal((await PDFDocument.load(await imagesToPdf([{ name: "a.png", bytes: 
 assert.equal((await PDFDocument.load(await watermarkPdf(await pages(1), "DRAFT", 0.3))).getPageCount(), 1, "watermark keeps page count");
 assert.equal((await PDFDocument.load(await addPageNumbers(three, { position: "bottom-right", format: "n/N" }))).getPageCount(), 3, "page numbers keep page count");
 assert.equal((await PDFDocument.load(await stampSignature(await pages(1), png, { where: "last" }))).getPageCount(), 1, "signature keeps page count");
+assert.equal((await PDFDocument.load(await stampSignature(await pages(1), png, { where: "all", pos: { xFrac: 0.5, yFrac: 0.5 } }))).getPageCount(), 1, "positioned signature keeps page count");
 // organize: pages sized 100/200/300 so the result proves both order and deletion
 const sized = await (async () => { const d = await PDFDocument.create(); for (const w of [100, 200, 300]) d.addPage([w, w]); return d.save(); })();
 const rb = await PDFDocument.load(await rebuildPdf(sized, [2, 0]));
