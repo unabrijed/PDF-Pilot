@@ -72,6 +72,13 @@ export async function compressPdf(bytes: Uint8Array): Promise<Uint8Array> {
   throw new Error(`Couldn't compress this PDF (qpdf exit ${rc}).${log ? ` Details: ${log.trim()}` : ""}`);
 }
 
+/** Repair a damaged PDF: a plain qpdf rewrite reconstructs the xref table and object structure. */
+export async function repairPdf(bytes: Uint8Array): Promise<Uint8Array> {
+  const { rc, out, log } = await runQpdf(bytes, ["/in.pdf", "/out.pdf"]);
+  if (out) return out;
+  throw new Error(`Couldn't repair this PDF (qpdf exit ${rc}).${log ? ` Details: ${log.trim()}` : ""}`);
+}
+
 function classify(text: string, rc: number): string {
   const t = text.toLowerCase();
   if (t.includes("invalid password") || t.includes("password"))

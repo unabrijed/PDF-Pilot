@@ -140,6 +140,18 @@ export async function stampSignature(
 }
 
 /**
+ * Salvage a damaged PDF by re-parsing it leniently and re-serializing.
+ * pdf-lib scans objects sequentially instead of trusting the xref, so this
+ * recovers bad startxref offsets, junked trailers, and truncated tails —
+ * cases the qpdf-wasm build can't (it ships without xref reconstruction).
+ */
+export async function salvagePdf(bytes: Uint8Array): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes, { throwOnInvalidObject: false, updateMetadata: false });
+  if (doc.getPageCount() === 0) throw new Error("No pages could be recovered.");
+  return doc.save();
+}
+
+/**
  * Combine images (JPG/PNG) into one PDF, one image per page sized to the image.
  * Note: pdf-lib's embedJpg can't handle CMYK or progressive JPEGs — those throw
  * (caught upstream and shown as a friendly error).

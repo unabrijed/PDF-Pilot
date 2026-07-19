@@ -88,6 +88,21 @@ assert.equal((await PDFDocument.load(await addPageNumbers(three, { position: "bo
 assert.equal((await PDFDocument.load(await stampSignature(await pages(1), png, { where: "last" }))).getPageCount(), 1, "signature keeps page count");
 console.log("✓ pdf-lib tools OK: merge / rotate / split / images / watermark / page-numbers / sign.");
 
+// repair, engine 1 (qpdf rewrite): junk before %PDF shifts every xref offset — qpdf re-anchors
+const shifted = new Uint8Array(Buffer.concat([Buffer.from("GARBAGE-HEADER\n"), sample]));
+const rep = await qpdfRun({ "in.pdf": shifted }, ["/in.pdf", "/out.pdf"], "out.pdf");
+assert.ok(ok(rep.rc) && rep.out?.length, `qpdf repair failed rc=${rep.rc}`);
+assert.equal((await PDFDocument.load(rep.out)).getPageCount(), 1, "qpdf-repaired PDF loads");
+
+// repair, engine 2 (pdf-lib salvage): tail truncated before the xref — qpdf-wasm can't
+// (no xref reconstruction in this build), pdf-lib's sequential parse can
+const { salvagePdf } = await import("../src/lib/pdf.ts");
+const truncated = sample.slice(0, Buffer.from(sample).indexOf("xref"));
+const failed = await qpdfRun({ "in.pdf": truncated }, ["/in.pdf", "/out.pdf"], "out.pdf");
+assert.ok(!ok(failed.rc), `qpdf should fail on a truncated tail, got rc=${failed.rc}`);
+assert.equal((await PDFDocument.load(await salvagePdf(truncated))).getPageCount(), 1, "salvage recovers a truncated tail");
+console.log("✓ repair OK: qpdf fixes shifted offsets, pdf-lib salvages a truncated tail.");
+
 // compress (qpdf flags) → valid output
 const comp = await qpdfRun({ "in.pdf": sample }, ["--object-streams=generate", "--recompress-flate", "--compression-level=9", "--decode-level=generalized", "/in.pdf", "/c.pdf"], "c.pdf");
 assert.ok(ok(comp.rc) && comp.out?.length, `compress failed rc=${comp.rc}`);

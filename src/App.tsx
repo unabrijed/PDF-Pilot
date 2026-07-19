@@ -16,6 +16,7 @@ const Watermark = lazy(() => import("./tools/watermark/Watermark"));
 const PageNumbers = lazy(() => import("./tools/page-numbers/PageNumbers"));
 const Compress = lazy(() => import("./tools/compress/Compress"));
 const Sign = lazy(() => import("./tools/sign/Sign"));
+const Repair = lazy(() => import("./tools/repair/Repair"));
 
 const closeMenu = (e: { currentTarget: HTMLElement }) =>
   e.currentTarget.closest("details")?.removeAttribute("open");
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="/page-numbers" element={<PageNumbers />} />
             <Route path="/compress" element={<Compress />} />
             <Route path="/sign" element={<Sign />} />
+            <Route path="/repair" element={<Repair />} />
           </Routes>
         </Suspense>
       </main>

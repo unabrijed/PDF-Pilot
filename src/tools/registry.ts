@@ -27,5 +27,5 @@ export const tools: Tool[] = [
   { slug: "organize", title: "Organize PDF", desc: "Reorder or delete pages.", icon: "🗂️", status: "soon", accepts: "pdf", produces: "pdf" },
   { slug: "crop", title: "Crop PDF", desc: "Trim page margins.", icon: "🔲", status: "soon", accepts: "pdf", produces: "pdf" },
   { slug: "ocr", title: "OCR PDF", desc: "Make scanned text searchable.", icon: "🔎", status: "soon", accepts: "pdf", produces: "pdf" },
-  { slug: "repair", title: "Repair PDF", desc: "Recover a damaged PDF.", icon: "🩹", status: "soon", accepts: "pdf", produces: "pdf" },
+  { slug: "repair", title: "Repair PDF", desc: "Recover a damaged PDF.", icon: "🩹", status: "ready", accepts: "pdf", produces: "pdf" },
 ];
