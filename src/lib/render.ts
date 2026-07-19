@@ -10,13 +10,20 @@ export interface RenderOpts {
   quality: number; // 0..1, jpg only
 }
 
-/** Render every page to a small JPEG data-URL thumbnail, ~`width` px wide. */
-export async function pdfToThumbs(bytes: Uint8Array, width = 150): Promise<string[]> {
+/**
+ * Render pages to small JPEG data-URL thumbnails, ~`width` px wide.
+ * `pages`: 1-based page numbers to render (negative counts from the end,
+ * -1 = last); omit for all pages.
+ */
+export async function pdfToThumbs(bytes: Uint8Array, width = 150, pages?: number[]): Promise<string[]> {
   const task = pdfjs.getDocument({ data: bytes.slice() });
   const doc = await task.promise;
   const out: string[] = [];
   try {
-    for (let n = 1; n <= doc.numPages; n++) {
+    const nums = pages
+      ? pages.map((p) => (p < 0 ? doc.numPages + 1 + p : p))
+      : Array.from({ length: doc.numPages }, (_, i) => i + 1);
+    for (const n of nums) {
       const page = await doc.getPage(n);
       const base = page.getViewport({ scale: 1 });
       const viewport = page.getViewport({ scale: width / base.width });

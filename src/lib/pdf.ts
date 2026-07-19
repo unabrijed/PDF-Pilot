@@ -160,6 +160,23 @@ export async function salvagePdf(bytes: Uint8Array): Promise<Uint8Array> {
   return doc.save();
 }
 
+export interface CropRect { x: number; y: number; w: number; h: number } // fractions of page size, top-down
+
+/**
+ * Set every page's CropBox to `rect` (fractions of the page, y from the top).
+ * Non-destructive: viewers clip to the CropBox, the full content stays in the file.
+ * ponytail: assumes a 0-origin MediaBox (true for virtually all PDFs).
+ */
+export async function cropPdf(bytes: Uint8Array, rect: CropRect): Promise<Uint8Array> {
+  if (rect.w <= 0 || rect.h <= 0) throw new Error("Draw a crop area first.");
+  const doc = await PDFDocument.load(bytes);
+  for (const page of doc.getPages()) {
+    const { width, height } = page.getSize();
+    page.setCropBox(rect.x * width, (1 - rect.y - rect.h) * height, rect.w * width, rect.h * height);
+  }
+  return doc.save();
+}
+
 export interface OcrWord { text: string; x0: number; y0: number; x1: number; y1: number }
 
 /**

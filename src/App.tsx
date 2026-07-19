@@ -19,6 +19,7 @@ const Sign = lazy(() => import("./tools/sign/Sign"));
 const Repair = lazy(() => import("./tools/repair/Repair"));
 const Organize = lazy(() => import("./tools/organize/Organize"));
 const Ocr = lazy(() => import("./tools/ocr/Ocr"));
+const Crop = lazy(() => import("./tools/crop/Crop"));
 
 const closeMenu = (e: { currentTarget: HTMLElement }) =>
   e.currentTarget.closest("details")?.removeAttribute("open");
@@ -86,6 +87,7 @@ export default function App() {
             <Route path="/repair" element={<Repair />} />
             <Route path="/organize" element={<Organize />} />
             <Route path="/ocr" element={<Ocr />} />
+            <Route path="/crop" element={<Crop />} />
           </Routes>
         </Suspense>
       </main>

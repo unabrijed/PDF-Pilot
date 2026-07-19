@@ -70,7 +70,7 @@ const { PDFDocument } = await import("pdf-lib");
 const { stem } = await import("../src/lib/names.ts");
 assert.equal(stem("report.final.pdf"), "report.final", "stem strips last extension");
 assert.equal(stem("noext"), "noext", "stem leaves extensionless names");
-const { mergePdfs, rotatePdf, extractPages, explodePdf, parseRanges, imagesToPdf, watermarkPdf, addPageNumbers, stampSignature, rebuildPdf, overlayTextLayer } = await import("../src/lib/pdf.ts");
+const { mergePdfs, rotatePdf, extractPages, explodePdf, parseRanges, imagesToPdf, watermarkPdf, addPageNumbers, stampSignature, rebuildPdf, overlayTextLayer, cropPdf } = await import("../src/lib/pdf.ts");
 const pages = async (n) => { const d = await PDFDocument.create(); for (let i = 0; i < n; i++) d.addPage(); return d.save(); };
 
 assert.equal((await PDFDocument.load(await mergePdfs([await pages(1), await pages(1)]))).getPageCount(), 2, "merge → 2 pages");
@@ -93,7 +93,13 @@ assert.equal(rb.getPageCount(), 2, "rebuild [2,0] → 2 pages");
 assert.equal(Math.round(rb.getPage(0).getWidth()), 300, "rebuild puts page 3 first");
 assert.equal(Math.round(rb.getPage(1).getWidth()), 100, "rebuild puts page 1 second");
 await assert.rejects(() => rebuildPdf(sized, []), "rebuild with no pages rejects");
-console.log("✓ pdf-lib tools OK: merge / rotate / split / images / watermark / page-numbers / sign / organize.");
+
+// crop: centre quarter of a 100×200 page → CropBox (25, 50, 50, 100); top-down y flips
+const single = await (async () => { const d = await PDFDocument.create(); d.addPage([100, 200]); return d.save(); })();
+const cropped = await PDFDocument.load(await cropPdf(single, { x: 0.25, y: 0.25, w: 0.5, h: 0.5 }));
+assert.deepEqual(cropped.getPage(0).getCropBox(), { x: 25, y: 50, width: 50, height: 100 }, "crop box placed exactly");
+await assert.rejects(() => cropPdf(single, { x: 0, y: 0, w: 0, h: 0 }), "empty crop rect rejects");
+console.log("✓ pdf-lib tools OK: merge / rotate / split / images / watermark / page-numbers / sign / organize / crop.");
 
 // ocr overlay: invisible words must come back out via pdf.js text extraction (real searchability)
 const ocrOut = await overlayTextLayer(await pages(1), [
