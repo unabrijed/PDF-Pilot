@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import Home from "./components/Home";
 import { tools } from "./tools/registry";
@@ -23,11 +23,36 @@ const Ocr = lazy(() => import("./tools/ocr/Ocr"));
 const closeMenu = (e: { currentTarget: HTMLElement }) =>
   e.currentTarget.closest("details")?.removeAttribute("open");
 
+function Logo() {
+  return (
+    <svg className="logo" viewBox="0 0 64 64" width="20" height="20" aria-hidden="true">
+      <g stroke="currentColor" strokeWidth="6" strokeLinecap="round" fill="none">
+        <path d="M6 46h52" />
+        <path d="M19 18v28M45 18v28" />
+        <path d="M19 22Q32 42 45 22" />
+        <path d="M19 22 6 46M45 22 58 46" />
+      </g>
+    </svg>
+  );
+}
+
 export default function App() {
+  const [theme, setTheme] = useState(() => (document.documentElement.dataset.theme === "dark" ? "dark" : "light"));
+  const flipTheme = () => {
+    const t = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = t;
+    localStorage.theme = t;
+    setTheme(t);
+  };
+
   return (
     <div className="app">
       <header className="topbar">
-        <Link to="/" className="brand">🌉 Bridge <span className="brand-sub">PDF tools</span></Link>
+        <Link to="/" className="brand"><Logo /> Bridge <span className="brand-sub">PDF tools</span></Link>
+        <div className="top-actions">
+        <button className="theme-btn" onClick={flipTheme} aria-label="Toggle dark mode" title="Toggle dark mode">
+          {theme === "dark" ? "☀️" : "🌙"}
+        </button>
         <details className="menu">
           <summary>All tools</summary>
           <div className="menu-pop">
@@ -40,6 +65,7 @@ export default function App() {
             )}
           </div>
         </details>
+        </div>
       </header>
 
       <main className="content">
