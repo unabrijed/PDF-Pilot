@@ -1,0 +1,5 @@
+#!/bin/sh
+# Block the push unless the project checks and builds clean.
+set -e
+echo "▶ pre-push: verifying pdf-tools…"
+npm run verify

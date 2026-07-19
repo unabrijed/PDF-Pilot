@@ -1,0 +1,17 @@
+# Bridge
+
+**Bridge** — a fully client-side PDF tools suite. Every tool runs in the browser, files never leave your device (no backend, no uploads). Its signature move: files *cross the bridge* from one tool to the next ("Continue in →").
+
+**Tools:** Unlock (bulk, via qpdf-wasm), Merge (via pdf-lib). Files carry across tools via a shared workspace ("Continue in →"); bulk results download as a `.zip`.
+
+```bash
+npm install     # also wires the git pre-push hook (prepare script)
+npm run dev      # http://localhost:5173
+npm run verify   # checks + build — same thing the pre-push hook runs
+npm run build    # production build (static, deployable anywhere)
+```
+
+Adding a tool: add an entry in `src/tools/registry.ts` (`status: "ready"`), a component in `src/tools/<slug>/` that reads the workspace and renders `<ResultsActions>`, and a lazy `<Route>` in `src/App.tsx`.
+
+## Pre-push
+`.githooks/pre-push` runs `npm run verify` and blocks the push on failure. It's wired via `git config core.hooksPath .githooks`, re-applied on every `npm install` by the `prepare` script.
