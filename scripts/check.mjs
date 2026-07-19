@@ -70,7 +70,7 @@ const { PDFDocument } = await import("pdf-lib");
 const { stem } = await import("../src/lib/names.ts");
 assert.equal(stem("report.final.pdf"), "report.final", "stem strips last extension");
 assert.equal(stem("noext"), "noext", "stem leaves extensionless names");
-const { mergePdfs, rotatePdf, extractPages, explodePdf, parseRanges, imagesToPdf, watermarkPdf, addPageNumbers, stampSignature, rebuildPdf } = await import("../src/lib/pdf.ts");
+const { mergePdfs, rotatePdf, extractPages, explodePdf, parseRanges, imagesToPdf, watermarkPdf, addPageNumbers, stampSignature, rebuildPdf, overlayTextLayer } = await import("../src/lib/pdf.ts");
 const pages = async (n) => { const d = await PDFDocument.create(); for (let i = 0; i < n; i++) d.addPage(); return d.save(); };
 
 assert.equal((await PDFDocument.load(await mergePdfs([await pages(1), await pages(1)]))).getPageCount(), 2, "merge → 2 pages");
@@ -94,6 +94,19 @@ assert.equal(Math.round(rb.getPage(0).getWidth()), 300, "rebuild puts page 3 fir
 assert.equal(Math.round(rb.getPage(1).getWidth()), 100, "rebuild puts page 1 second");
 await assert.rejects(() => rebuildPdf(sized, []), "rebuild with no pages rejects");
 console.log("✓ pdf-lib tools OK: merge / rotate / split / images / watermark / page-numbers / sign / organize.");
+
+// ocr overlay: invisible words must come back out via pdf.js text extraction (real searchability)
+const ocrOut = await overlayTextLayer(await pages(1), [
+  { words: [{ text: "hello", x0: 100, y0: 100, x1: 300, y1: 140 }, { text: "bridge", x0: 320, y0: 100, x1: 500, y1: 140 }], scale: 2 },
+]);
+const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+const task = pdfjs.getDocument({ data: ocrOut.slice() });
+const ocrDoc = await task.promise;
+const tc = await (await ocrDoc.getPage(1)).getTextContent();
+const extracted = tc.items.map((it) => it.str).join(" ");
+await task.destroy();
+assert.ok(extracted.includes("hello") && extracted.includes("bridge"), `text layer not extractable, got "${extracted}"`);
+console.log("✓ OCR overlay round-trips: invisible words are extractable text.");
 
 // repair, engine 1 (qpdf rewrite): junk before %PDF shifts every xref offset — qpdf re-anchors
 const shifted = new Uint8Array(Buffer.concat([Buffer.from("GARBAGE-HEADER\n"), sample]));

@@ -160,6 +160,35 @@ export async function salvagePdf(bytes: Uint8Array): Promise<Uint8Array> {
   return doc.save();
 }
 
+export interface OcrWord { text: string; x0: number; y0: number; x1: number; y1: number }
+
+/**
+ * Overlay invisible (opacity-0) text onto each page, making a scanned PDF
+ * searchable. Word boxes are in rendered-image pixels, top-down; `scale` is
+ * pixels per PDF point for that render.
+ * ponytail: pages with /Rotate get a misplaced layer — handle rotation if
+ * rotated scans show up in practice.
+ */
+export async function overlayTextLayer(
+  bytes: Uint8Array,
+  pages: { words: OcrWord[]; scale: number }[]
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  doc.getPages().forEach((page, i) => {
+    const layer = pages[i];
+    if (!layer) return;
+    const { height } = page.getSize();
+    for (const w of layer.words) {
+      const text = w.text.replace(/[^\x20-\x7e]/g, "").trim(); // Helvetica encodes WinAnsi only
+      if (!text) continue;
+      const size = Math.max(4, (w.y1 - w.y0) / layer.scale);
+      page.drawText(text, { x: w.x0 / layer.scale, y: height - w.y1 / layer.scale, size, font, opacity: 0 });
+    }
+  });
+  return doc.save();
+}
+
 /**
  * Combine images (JPG/PNG) into one PDF, one image per page sized to the image.
  * Note: pdf-lib's embedJpg can't handle CMYK or progressive JPEGs — those throw
