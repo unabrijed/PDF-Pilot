@@ -4,8 +4,11 @@ import { tools } from "../tools/registry";
 export default function Home() {
   return (
     <section className="home">
-      <h1 className="home-title">Every PDF tool, connected</h1>
-      <p className="home-sub">Free · Private · In-browser — nothing uploaded</p>
+      <div className="hero">
+        <span className="hero-eyebrow">Free · Private · In your browser</span>
+        <h1 className="home-title">Every PDF tool,<br /><span className="grad-text">connected.</span></h1>
+        <p className="home-sub">Every file stays on your device. Nothing is uploaded.</p>
+      </div>
       <div className="grid">
         {tools.map((t) => {
           const inner = (

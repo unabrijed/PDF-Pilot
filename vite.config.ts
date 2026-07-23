@@ -9,15 +9,15 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "Bridge — PDF tools",
+        name: "Bridge PDF tools",
         short_name: "Bridge",
-        description: "Every PDF tool, entirely in your browser — nothing uploaded.",
-        theme_color: "#4f46e5",
-        background_color: "#f8fafc",
+        description: "Every PDF tool, entirely in your browser. Nothing uploaded.",
+        theme_color: "#5b3df5",
+        background_color: "#f5f4ef",
         icons: [{ src: "favicon.svg", sizes: "any", type: "image/svg+xml" }],
       },
       workbox: {
-        globPatterns: ["**/*.{js,mjs,css,html,svg,wasm}"], // mjs: the pdf.js worker asset
+        globPatterns: ["**/*.{js,mjs,css,html,svg,wasm,woff2}"], // woff2: self-hosted brand fonts for offline; mjs: pdf.js worker
         // The self-hosted OCR engine (~12MB) is cached on first OCR use instead of
         // being precached for every visitor.
         globIgnores: ["tesseract/**", "tessdata/**"],
