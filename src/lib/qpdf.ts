@@ -82,7 +82,7 @@ export async function repairPdf(bytes: Uint8Array): Promise<Uint8Array> {
 function classify(text: string, rc: number): string {
   const t = text.toLowerCase();
   if (t.includes("invalid password") || t.includes("password"))
-    return "Wrong password — or this PDF needs a password to unlock. Check it and try again.";
+    return "Wrong password, or this PDF needs a password to unlock. Check it and try again.";
   if (t.includes("not a pdf") || t.includes("damaged") || t.includes("can't find") || t.includes("unable"))
     return "This file couldn't be read as a PDF. Make sure it's a valid, non-corrupt PDF.";
   return `Couldn't unlock this PDF (qpdf exit ${rc}).${text ? ` Details: ${text.trim()}` : ""}`;

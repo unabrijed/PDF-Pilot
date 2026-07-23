@@ -15,7 +15,7 @@ export default function JpgToPdf() {
   return (
     <section className="tool">
       <h1>🖼️ JPG to PDF</h1>
-      <p className="tool-sub">Combine images into one PDF — one image per page, in the order listed.</p>
+      <p className="tool-sub">Combine images into one PDF, one image per page, in the order listed.</p>
       <FileStaging accepts="image" />
       <button className="primary" disabled={!files.length || running} onClick={start}>
         {running ? "Building…" : "Create PDF"}

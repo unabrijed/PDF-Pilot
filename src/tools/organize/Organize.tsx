@@ -45,7 +45,7 @@ export default function Organize() {
       <h1>🗂️ Organize PDF</h1>
       <p className="tool-sub">Drag pages to reorder, ✕ to delete, then apply.</p>
       <FileStaging accepts="pdf" />
-      {files.length > 1 && <p className="hint-line">Organize works on the first staged PDF — remove the others or run it once per file.</p>}
+      {files.length > 1 && <p className="hint-line">Organize works on the first staged PDF. Remove the others or run it once per file.</p>}
       {file && !thumbs.length && !thumbErr && <p className="hint-line">Rendering pages…</p>}
       {thumbErr && <p className="msg error">⚠️ {thumbErr}</p>}
 

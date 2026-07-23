@@ -40,7 +40,7 @@ export default function Crop() {
   return (
     <section className="tool">
       <h1>🔲 Crop PDF</h1>
-      <p className="tool-sub">Drag a rectangle on the preview — the same crop (as a fraction of each page) applies to every page and file.</p>
+      <p className="tool-sub">Drag a rectangle on the preview. The same crop (as a fraction of each page) applies to every page and file.</p>
       <FileStaging accepts="pdf" />
       {file && !preview && !prevErr && <p className="hint-line">Rendering preview…</p>}
       {prevErr && <p className="msg error">⚠️ {prevErr}</p>}

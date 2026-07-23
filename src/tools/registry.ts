@@ -24,6 +24,7 @@ export const tools: Tool[] = [
   { slug: "page-numbers", title: "Page numbers", desc: "Stamp page numbers onto a PDF.", icon: "🔢", status: "ready", accepts: "pdf", produces: "pdf" },
   { slug: "watermark", title: "Watermark", desc: "Overlay text across every page.", icon: "💧", status: "ready", accepts: "pdf", produces: "pdf" },
   { slug: "sign", title: "Sign PDF", desc: "Draw a signature and stamp it on.", icon: "✍️", status: "ready", accepts: "pdf", produces: "pdf" },
+  { slug: "pdf-editor", title: "PDF Editor", desc: "Add text, images and signatures. Move, resize, crop, place on any page.", icon: "🖊️", status: "ready", accepts: "pdf", produces: "pdf" },
   { slug: "organize", title: "Organize PDF", desc: "Reorder or delete pages.", icon: "🗂️", status: "ready", accepts: "pdf", produces: "pdf" },
   { slug: "crop", title: "Crop PDF", desc: "Trim page margins.", icon: "🔲", status: "ready", accepts: "pdf", produces: "pdf" },
   { slug: "ocr", title: "OCR PDF", desc: "Make scanned text searchable.", icon: "🔎", status: "ready", accepts: "pdf", produces: "pdf" },

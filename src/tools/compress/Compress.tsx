@@ -19,7 +19,7 @@ export default function Compress() {
   return (
     <section className="tool">
       <h1>🗜️ Compress PDF</h1>
-      <p className="tool-sub">Light, lossless recompression — savings vary; already-optimized PDFs may not shrink.</p>
+      <p className="tool-sub">Light, lossless recompression. Savings vary and already optimized PDFs may not shrink.</p>
       <FileStaging accepts="pdf" />
       <button className="primary" disabled={!files.length || running} onClick={start}>
         {running ? `Compressing ${progress}/${files.length}…` : files.length > 1 ? `Compress ${files.length} PDFs` : "Compress PDF"}

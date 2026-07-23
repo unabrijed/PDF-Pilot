@@ -53,7 +53,7 @@ export default function Ocr() {
       <h1>🔎 OCR PDF</h1>
       <p className="tool-sub">
         Add an invisible, searchable text layer to scanned pages (English).
-        The OCR engine ships with the app — everything runs on your device, even offline.
+        The OCR engine ships with the app. Everything runs on your device, even offline.
       </p>
       <FileStaging accepts="pdf" />
       <button className="primary" disabled={!files.length || running} onClick={start}>

@@ -24,7 +24,7 @@ export default function Repair() {
         try {
           out.push({ name: `${stem(files[i].name)}-repaired.pdf`, data: await repair(await read(files[i])) });
         } catch {
-          fail(`${files[i].name}: couldn't recover this file — its content may be lost beyond repair.`);
+          fail(`${files[i].name}: couldn't recover this file. Its content may be lost beyond repair.`);
         }
       }
       return out;
@@ -34,7 +34,7 @@ export default function Repair() {
   return (
     <section className="tool">
       <h1>🩹 Repair PDF</h1>
-      <p className="tool-sub">Rebuild a damaged PDF's structure — recovers broken cross-reference tables where possible.</p>
+      <p className="tool-sub">Rebuild a damaged PDF's structure and recover broken cross-reference tables where possible.</p>
       <FileStaging accepts="pdf" />
       <button className="primary" disabled={!files.length || running} onClick={start}>
         {running ? `Repairing ${progress}/${files.length}…` : files.length > 1 ? `Repair ${files.length} PDFs` : "Repair PDF"}

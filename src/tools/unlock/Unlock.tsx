@@ -15,7 +15,7 @@ export default function Unlock() {
         try {
           out.push({ name: `${stem(files[i].name)}-unlocked.pdf`, data: await decryptPdf(await read(files[i]), password) });
         } catch (e) {
-          fail(`✗ ${files[i].name} — ${e instanceof Error ? e.message : String(e)}`);
+          fail(`✗ ${files[i].name}: ${e instanceof Error ? e.message : String(e)}`);
         }
       }
       return out;
@@ -28,7 +28,7 @@ export default function Unlock() {
       <p className="tool-sub">Remove passwords or owner restrictions. Runs in your browser.</p>
       <FileStaging accepts="pdf" />
       <label className="field">
-        <span>Password <em>(optional — leave empty for restriction-only PDFs)</em></span>
+        <span>Password <em>(optional, leave empty for restriction-only PDFs)</em></span>
         <input
           type="password"
           value={password}
