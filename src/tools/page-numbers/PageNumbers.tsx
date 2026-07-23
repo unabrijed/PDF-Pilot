@@ -1,6 +1,7 @@
 import { useState } from "react";
 import FileStaging from "../../components/FileStaging";
 import ResultsActions from "../../components/ResultsActions";
+import Select from "../../components/Select";
 import { addPageNumbers, type NumberFormat, type NumberPosition } from "../../lib/pdf";
 import { stem } from "../../lib/names";
 import { useToolRun } from "../../lib/useToolRun";
@@ -24,22 +25,32 @@ export default function PageNumbers() {
       <h1>🔢 Page numbers</h1>
       <p className="tool-sub">Stamp page numbers onto every page.</p>
       <FileStaging accepts="pdf" />
-      <label className="field">
+      <div className="field">
         <span>Position</span>
-        <select value={position} onChange={(e) => setPosition(e.target.value as NumberPosition)}>
-          <option value="bottom-center">Bottom center</option>
-          <option value="bottom-right">Bottom right</option>
-          <option value="bottom-left">Bottom left</option>
-        </select>
-      </label>
-      <label className="field">
+        <Select
+          ariaLabel="Position"
+          value={position}
+          onChange={(v) => setPosition(v as NumberPosition)}
+          options={[
+            { value: "bottom-center", label: "Bottom center" },
+            { value: "bottom-right", label: "Bottom right" },
+            { value: "bottom-left", label: "Bottom left" },
+          ]}
+        />
+      </div>
+      <div className="field">
         <span>Format</span>
-        <select value={format} onChange={(e) => setFormat(e.target.value as NumberFormat)}>
-          <option value="n">1</option>
-          <option value="n/N">1 / N</option>
-          <option value="page">Page 1</option>
-        </select>
-      </label>
+        <Select
+          ariaLabel="Format"
+          value={format}
+          onChange={(v) => setFormat(v as NumberFormat)}
+          options={[
+            { value: "n", label: "1" },
+            { value: "n/N", label: "1 / N" },
+            { value: "page", label: "Page 1" },
+          ]}
+        />
+      </div>
       <button className="primary" disabled={!files.length || running} onClick={start}>
         {running ? `Numbering ${progress}/${files.length}…` : "Add page numbers"}
       </button>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import FileStaging from "../../components/FileStaging";
 import ResultsActions from "../../components/ResultsActions";
+import Select from "../../components/Select";
 import { pdfToImages } from "../../lib/render";
 import { stem } from "../../lib/names";
 import { useToolRun } from "../../lib/useToolRun";
@@ -24,13 +25,18 @@ export default function PdfToJpg() {
       <h1>🏞️ PDF to JPG</h1>
       <p className="tool-sub">Turn each page into an image. Multiple pages download as a .zip.</p>
       <FileStaging accepts="pdf" />
-      <label className="field">
+      <div className="field">
         <span>Format</span>
-        <select value={format} onChange={(e) => setFormat(e.target.value as "jpg" | "png")}>
-          <option value="jpg">JPG</option>
-          <option value="png">PNG</option>
-        </select>
-      </label>
+        <Select
+          ariaLabel="Format"
+          value={format}
+          onChange={(v) => setFormat(v as "jpg" | "png")}
+          options={[
+            { value: "jpg", label: "JPG" },
+            { value: "png", label: "PNG" },
+          ]}
+        />
+      </div>
       <button className="primary" disabled={!files.length || running} onClick={start}>
         {running ? `Rendering ${progress}/${files.length}…` : "PDF to images"}
       </button>
