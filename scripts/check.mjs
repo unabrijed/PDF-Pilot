@@ -102,6 +102,18 @@ assert.deepEqual(cropped.getPage(0).getCropBox(), { x: 25, y: 50, width: 50, hei
 await assert.rejects(() => cropPdf(single, { x: 0, y: 0, w: 0, h: 0 }), "empty crop rect rejects");
 console.log("✓ pdf-lib tools OK: merge / rotate / split / images / watermark / page-numbers / sign / organize / crop.");
 
+// pdf-editor: top-left fractional box → pdf-lib bottom-left rect (the export⇄preview contract)
+const { imageBoxToRect, bakeEditorElements } = await import("../src/lib/pdf.ts");
+assert.deepEqual(imageBoxToRect({ x: 0, y: 0, w: .5, h: .5 }, 600, 800), { x: 0, y: 400, width: 300, height: 400 }, "top-left box → upper half, y flipped");
+assert.deepEqual(imageBoxToRect({ x: 0, y: 0, w: 1, h: 1 }, 600, 800), { x: 0, y: 0, width: 600, height: 800 }, "full-page box fills page");
+assert.deepEqual(imageBoxToRect({ x: .5, y: .5, w: .5, h: .5 }, 600, 800), { x: 300, y: 0, width: 300, height: 400 }, "bottom-right box sits at origin");
+const bakeSmoke = await bakeEditorElements(single, [
+  { kind: "image", page: 0, x: 0, y: 0, w: .5, h: .5, bytes: png },
+  { kind: "text", page: 0, x: .1, y: .1, fontFrac: .05, text: "Hi", color: "#ff0000" },
+]);
+assert.equal((await PDFDocument.load(bakeSmoke)).getPageCount(), 1, "bake keeps page count");
+console.log("✓ pdf-editor coord math + bake OK.");
+
 // ocr overlay: invisible words must come back out via pdf.js text extraction (real searchability)
 const ocrOut = await overlayTextLayer(await pages(1), [
   { words: [{ text: "hello", x0: 100, y0: 100, x1: 300, y1: 140 }, { text: "bridge", x0: 320, y0: 100, x1: 500, y1: 140 }], scale: 2 },

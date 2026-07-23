@@ -1,4 +1,4 @@
-import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { degrees, PDFDocument, type PDFFont, rgb, StandardFonts } from "pdf-lib";
 
 /** Merge PDFs (in the given order) into one document. */
 export async function mergePdfs(list: Uint8Array[]): Promise<Uint8Array> {
@@ -209,6 +209,56 @@ export async function overlayTextLayer(
       page.drawText(text, { x: w.x0 / layer.scale, y: height - w.y1 / layer.scale, size, font, opacity: 0 });
     }
   });
+  return doc.save();
+}
+
+// --- PDF Editor: bake movable/resizable image + text overlays onto pages ---
+
+// ponytail: Helvetica ascent ≈ 0.8·em. The editor's on-screen text uses the same
+// factor (line-height 1), so preview and export agree; nudge if text sits high/low.
+const BASELINE = 0.8;
+
+/** Top-left fractional box {x,y,w,h} → pdf-lib bottom-left rect in points. Pure, testable. */
+export function imageBoxToRect(b: { x: number; y: number; w: number; h: number }, W: number, H: number) {
+  return { x: b.x * W, y: (1 - b.y - b.h) * H, width: b.w * W, height: b.h * H };
+}
+
+const hexRgb = (hex: string) => {
+  const n = parseInt(hex.slice(1), 16);
+  return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+};
+
+export type BakeElement =
+  | { kind: "image"; page: number; x: number; y: number; w: number; h: number; bytes: Uint8Array }
+  | { kind: "text"; page: number; x: number; y: number; fontFrac: number; text: string; color: string; bold?: boolean };
+
+/**
+ * Stamp editor elements onto their pages. Elements carry a 0-based `page` and
+ * top-left page fractions, so this maps 1:1 to what the on-screen overlay shows.
+ */
+export async function bakeEditorElements(pdfBytes: Uint8Array, elements: BakeElement[]): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(pdfBytes);
+  const pages = doc.getPages();
+  let font: PDFFont | undefined;
+  let boldFont: PDFFont | undefined;
+  for (const el of elements) {
+    const page = pages[el.page];
+    if (!page) continue;
+    const { width: W, height: H } = page.getSize();
+    if (el.kind === "image") {
+      const isPng = el.bytes[0] === 0x89 && el.bytes[1] === 0x50; // \x89PNG, as in imagesToPdf
+      const img = isPng ? await doc.embedPng(el.bytes) : await doc.embedJpg(el.bytes);
+      page.drawImage(img, imageBoxToRect(el, W, H));
+    } else {
+      const face = el.bold
+        ? (boldFont ??= await doc.embedFont(StandardFonts.HelveticaBold))
+        : (font ??= await doc.embedFont(StandardFonts.Helvetica));
+      const size = el.fontFrac * H;
+      const text = el.text.replace(/[^\x20-\x7e]/g, ""); // Helvetica encodes WinAnsi only
+      if (!text) continue;
+      page.drawText(text, { x: el.x * W, y: (1 - el.y) * H - BASELINE * size, size, font: face, color: hexRgb(el.color) });
+    }
+  }
   return doc.save();
 }
 

@@ -42,6 +42,22 @@ export async function pdfToThumbs(bytes: Uint8Array, width = 150, pages?: number
   return out;
 }
 
+/** Page sizes in points (`.length` = page count). Used to size the editor navigator + pt↔fraction. */
+export async function pageSizes(bytes: Uint8Array): Promise<{ width: number; height: number }[]> {
+  const task = pdfjs.getDocument({ data: bytes.slice() });
+  const doc = await task.promise;
+  try {
+    const out: { width: number; height: number }[] = [];
+    for (let n = 1; n <= doc.numPages; n++) {
+      const v = (await doc.getPage(n)).getViewport({ scale: 1 });
+      out.push({ width: v.width, height: v.height });
+    }
+    return out;
+  } finally {
+    await task.destroy();
+  }
+}
+
 /** Render every page of a PDF to an image. `stem` names the outputs (stem-p1.jpg …). */
 export async function pdfToImages(bytes: Uint8Array, stem: string, opts: RenderOpts): Promise<NamedBytes[]> {
   const mime = opts.format === "png" ? "image/png" : "image/jpeg";
