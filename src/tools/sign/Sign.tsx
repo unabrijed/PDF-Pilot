@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import FileStaging from "../../components/FileStaging";
 import ResultsActions from "../../components/ResultsActions";
-import SignaturePad, { type SignaturePadHandle } from "../../components/SignaturePad";
+import Select from "../../components/Select";
+import SignatureCreator, { type SignaturePadHandle } from "../../components/SignatureCreator";
 import { stampSignature } from "../../lib/pdf";
 import { pdfToThumbs } from "../../lib/render";
 import { stem } from "../../lib/names";
@@ -69,17 +70,22 @@ export default function Sign() {
   return (
     <section className="tool">
       <h1>✍️ Sign PDF</h1>
-      <p className="tool-sub">Draw a signature, then click or drag on the preview to place it.</p>
+      <p className="tool-sub">Draw, type, or upload a signature, then click on the preview to place it.</p>
       <FileStaging accepts="pdf" />
-      <SignaturePad ref={padRef} onInk={(has) => setSigUrl(has ? padRef.current?.toDataUrl() ?? null : null)} />
-      <label className="field">
+      <SignatureCreator ref={padRef} onInk={(has) => setSigUrl(has ? padRef.current?.toDataUrl() ?? null : null)} />
+      <div className="field">
         <span>Place on</span>
-        <select value={where} onChange={(e) => setWhere(e.target.value as "last" | "first" | "all")}>
-          <option value="last">Last page</option>
-          <option value="first">First page</option>
-          <option value="all">Every page</option>
-        </select>
-      </label>
+        <Select
+          ariaLabel="Place on"
+          value={where}
+          onChange={(v) => setWhere(v as "last" | "first" | "all")}
+          options={[
+            { value: "last", label: "Last page" },
+            { value: "first", label: "First page" },
+            { value: "all", label: "Every page" },
+          ]}
+        />
+      </div>
       {sigUrl && pageThumb && (
         <>
           <Placer page={pageThumb} sig={sigUrl} pos={pos} onPos={setPos} />
