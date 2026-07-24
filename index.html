@@ -8,8 +8,8 @@
     <title>Bridge PDF tools, in your browser</title>
     <script>
       // Set the theme before first paint (no flash): saved choice, else system.
-      document.documentElement.dataset.theme =
-        localStorage.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      var t = localStorage.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.classList.toggle("dark", t === "dark");
     </script>
   </head>
   <body>

@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, ArrowLeft, Bold, ChevronDown, ChevronUp, Crop as CropIcon, Image as ImageIcon, Loader2, PenLine, Plus, Trash2 } from "lucide-react";
 import FileStaging from "../../components/FileStaging";
 import RectSelect from "../../components/RectSelect";
 import ResultsActions from "../../components/ResultsActions";
 import SignatureCreator, { type SignaturePadHandle } from "../../components/SignatureCreator";
+import ToolHeader from "../../components/ToolHeader";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Toggle } from "../../components/ui/toggle";
 import { bakeEditorElements, type BakeElement, type CropRect } from "../../lib/pdf";
 import { pageSizes, pdfToThumbs } from "../../lib/render";
-import { stem } from "../../lib/names";
+import { dataUrlToBytes, stem } from "../../lib/names";
+import { cn } from "../../lib/utils";
 import { getBytes, useWorkspace } from "../../workspace";
 import ElementBox from "./ElementBox";
 import type { Dir, El, ImageEl } from "./types";
@@ -13,13 +20,6 @@ import type { Dir, El, ImageEl } from "./types";
 let uid = 0;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const MIN = 0.02; // smallest box, as a page fraction
-
-function dataUrlToBytes(url: string): Uint8Array {
-  const bin = atob(url.split(",")[1]);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return arr;
-}
 
 const loadImg = (src: string) =>
   new Promise<HTMLImageElement>((ok, no) => {
@@ -57,6 +57,7 @@ export default function PdfEditor() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [crop, setCrop] = useState<{ id: string; rect: CropRect | null } | null>(null);
+  const [sigOpen, setSigOpen] = useState(false);
 
   const [baked, setBaked] = useState<Uint8Array | null>(null);
   const [previewThumbs, setPreviewThumbs] = useState<string[] | null>(null);
@@ -202,6 +203,7 @@ export default function PdfEditor() {
     const url = padRef.current?.toDataUrl();
     if (!url) { setError("Make a signature first."); return; }
     setError(null);
+    setSigOpen(false);
     setPending({ kind: "image", src: url });
   }
 
@@ -215,7 +217,7 @@ export default function PdfEditor() {
       setPending(null);
       return;
     }
-    if (!(e.target as HTMLElement).closest(".el-box")) setSelectedId(null);
+    if (!(e.target as HTMLElement).closest("[data-el]")) setSelectedId(null);
   }
 
   function deleteSelected() {
@@ -261,89 +263,144 @@ export default function PdfEditor() {
   }
 
   const outName = file ? `${stem(file.name)}-edited.pdf` : "edited.pdf";
-
   const cropEl = crop ? (els.find((e) => e.id === crop.id) as ImageEl | undefined) : undefined;
+  const patchSel = (fn: (x: El) => El) => setEls((es) => es.map((x) => (x.id === selectedId ? fn(x) : x)));
 
   return (
-    <section className="tool tool-wide">
-      <h1>🖊️ PDF Editor</h1>
-      <p className="tool-sub">Add text, images, and signatures. Click a tool, then click a page to place it. Drag to move, drag a handle to resize.</p>
+    <section className="mx-auto w-full max-w-4xl">
+      <ToolHeader
+        slug="pdf-editor"
+        sub="Add text, images, and signatures. Click a tool, then click a page to place it. Drag to move, drag a handle to resize."
+      />
+
       <FileStaging accepts="pdf" />
 
-      {error && <p className="msg error">⚠️ {error}</p>}
+      {error && (
+        <Alert variant="destructive" className="mt-5">
+          <AlertTriangle />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       {baked && previewThumbs ? (
         <>
-          <p className="hint-line">Baked result. Check the placement, then download.</p>
-          <div className="thumb-grid">
+          <p className="text-muted-foreground mt-6 text-sm">Baked result. Check the placement, then download.</p>
+          <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3.5">
             {previewThumbs.map((t, i) => (
-              <figure key={i} className="thumb"><img src={t} alt={`Page ${i + 1}`} /></figure>
+              <figure key={i} className="bg-card m-0 rounded-lg border p-2">
+                <img src={t} alt={`Page ${i + 1}`} className="block w-full rounded border bg-white" />
+              </figure>
             ))}
           </div>
-          <button className="link" onClick={() => { setBaked(null); setPreviewThumbs(null); renderedRef.current = new Set(); setThumbs({}); }}>← Back to editing</button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3"
+            onClick={() => { setBaked(null); setPreviewThumbs(null); renderedRef.current = new Set(); setThumbs({}); }}
+          >
+            <ArrowLeft /> Back to editing
+          </Button>
           <ResultsActions items={[{ name: outName, data: baked }]} currentSlug="pdf-editor" />
         </>
       ) : file && bytes && sizes.length ? (
         <>
-          <div className="editor-toolbar">
-            <button className={`chip${pending?.kind === "text" ? " on" : ""}`} onClick={() => setPending({ kind: "text" })}>➕ Text</button>
-            <button className="chip" onClick={() => imgInput.current?.click()}>🖼️ Image</button>
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <Button
+              variant={pending?.kind === "text" ? "default" : "outline"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setPending({ kind: "text" })}
+            >
+              <Plus /> Text
+            </Button>
+            <Button variant="outline" size="sm" className="rounded-full" onClick={() => imgInput.current?.click()}>
+              <ImageIcon /> Image
+            </Button>
             <input ref={imgInput} type="file" accept="image/png,image/jpeg" hidden onChange={armImage} />
-            <details className="sig-disclosure">
-              <summary>✍️ Signature</summary>
-              <div className="sig-panel">
-                <SignatureCreator ref={padRef} onInk={() => {}} />
-                <button className="primary sm" onClick={armSignature}>Use signature</button>
-              </div>
-            </details>
+            <Button
+              variant={sigOpen ? "default" : "outline"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setSigOpen((o) => !o)}
+            >
+              <PenLine /> Signature
+            </Button>
           </div>
 
-          {pending && <p className="hint-line accent">Click on a page to place the {pending.kind}. <button className="link" onClick={() => setPending(null)}>Cancel</button></p>}
+          {sigOpen && (
+            <div className="bg-card mt-3 space-y-4 rounded-xl border p-4">
+              <SignatureCreator ref={padRef} onInk={() => {}} />
+              <Button size="sm" onClick={armSignature}>Use signature</Button>
+            </div>
+          )}
+
+          {pending && (
+            <p className="text-primary mt-3 flex items-center gap-2 text-sm font-medium">
+              Click on a page to place the {pending.kind}.
+              <Button variant="link" size="sm" className="h-auto p-0" onClick={() => setPending(null)}>Cancel</Button>
+            </p>
+          )}
 
           {crop && cropEl ? (
-            <>
-              <p className="hint-line">Drag a rectangle to keep just that part of the image.</p>
+            <div className="mt-4 space-y-3">
+              <p className="text-muted-foreground text-sm">Drag a rectangle to keep just that part of the image.</p>
               <RectSelect src={cropEl.src} rect={crop.rect} onRect={(r) => setCrop({ ...crop, rect: r })} />
-              <div className="editor-toolbar">
-                <button className="primary sm" onClick={applyCrop}>Apply crop</button>
-                <button className="link" onClick={() => setCrop(null)}>Cancel</button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" onClick={applyCrop}>Apply crop</Button>
+                <Button variant="ghost" size="sm" onClick={() => setCrop(null)}>Cancel</Button>
               </div>
-            </>
+            </div>
           ) : (
             <>
               {sizes.length > 1 && (
-                <div className="editor-topbar">
+                <div className="bg-card text-muted-foreground sticky top-[70px] z-5 mt-3 flex items-center gap-2.5 rounded-full border px-3.5 py-2 text-sm">
                   <span>Page</span>
-                  <input
+                  <Input
                     type="number"
                     min={1}
                     max={sizes.length}
                     value={current + 1}
+                    className="h-8 w-16 text-center"
                     onChange={(e) => scrollToPage(clamp(Number(e.target.value) - 1, 0, sizes.length - 1))}
                   />
                   <span>/ {sizes.length}</span>
-                  <span className="spacer" />
-                  <button className="pagebtn" disabled={current === 0} onClick={() => scrollToPage(current - 1)} aria-label="Previous page">↑</button>
-                  <button className="pagebtn" disabled={current === sizes.length - 1} onClick={() => scrollToPage(current + 1)} aria-label="Next page">↓</button>
+                  <span className="flex-1" />
+                  <Button variant="outline" size="icon-sm" className="rounded-full" disabled={current === 0} onClick={() => scrollToPage(current - 1)} aria-label="Previous page">
+                    <ChevronUp />
+                  </Button>
+                  <Button variant="outline" size="icon-sm" className="rounded-full" disabled={current === sizes.length - 1} onClick={() => scrollToPage(current + 1)} aria-label="Next page">
+                    <ChevronDown />
+                  </Button>
                 </div>
               )}
 
-              <div className={`editor-scroll${pending ? " placing" : ""}`} ref={scrollRef} onScroll={onScroll}>
+              <div
+                ref={scrollRef}
+                onScroll={onScroll}
+                className={cn(
+                  "bg-background relative mt-3 flex max-h-[70vh] flex-col gap-4 overflow-y-auto rounded-xl border p-1.5",
+                  pending && "cursor-crosshair"
+                )}
+              >
                 {sizes.map((s, i) => (
                   <div
                     key={i}
                     data-page={i}
-                    ref={(el) => (stageRefs.current[i] = el)}
-                    className="editor-page"
+                    ref={(el) => { stageRefs.current[i] = el; }}
+                    className="relative mx-auto w-full max-w-3xl touch-none overflow-hidden rounded-lg bg-white shadow select-none"
                     style={{ aspectRatio: `${s.width} / ${s.height}` }}
                     onPointerMove={onMove}
                     onPointerUp={endDrag}
                     onPointerCancel={endDrag}
                     onClick={(e) => onStageClick(i, e)}
                   >
-                    {thumbs[i]
-                      ? <img className="editor-page-img" src={thumbs[i]} alt={`Page ${i + 1}`} draggable={false} />
-                      : <div className="editor-page-ph">Page {i + 1}</div>}
+                    {thumbs[i] ? (
+                      <img className="block w-full" src={thumbs[i]} alt={`Page ${i + 1}`} draggable={false} />
+                    ) : (
+                      <div className="text-muted-foreground grid h-full w-full place-items-center bg-[repeating-linear-gradient(45deg,#f3f2ee,#f3f2ee_12px,#eeece6_12px,#eeece6_24px)] text-xs">
+                        Page {i + 1}
+                      </div>
+                    )}
                     {els.filter((e) => e.page === i).map((el) => (
                       <ElementBox key={el.id} el={el} selected={el.id === selectedId} stageH={stageHeights[i] ?? 0} onBodyDown={onBodyDown} onHandleDown={onHandleDown} />
                     ))}
@@ -354,31 +411,61 @@ export default function PdfEditor() {
           )}
 
           {selected && !crop && (
-            <div className="editor-props">
+            <div className="bg-card mt-4 flex flex-wrap items-center gap-2.5 rounded-lg border p-3">
               {selected.kind === "text" ? (
                 <>
-                  <input value={selected.text} onChange={(e) => setEls((es) => es.map((x) => (x.id === selected.id ? { ...x, text: e.target.value } : x)))} placeholder="Text" />
-                  <label>Size
-                    <input type="number" min={4} max={200} value={Math.round(selected.fontFrac * (sizes[selected.page]?.height ?? 1))}
-                      onChange={(e) => setEls((es) => es.map((x) => (x.id === selected.id && x.kind === "text" ? { ...x, fontFrac: (Number(e.target.value) || 1) / (sizes[x.page]?.height ?? 1) } : x)))} />
+                  <Input
+                    value={selected.text}
+                    placeholder="Text"
+                    className="min-w-[150px] flex-1"
+                    onChange={(e) => patchSel((x) => ({ ...x, text: e.target.value }))}
+                  />
+                  <label className="text-muted-foreground inline-flex items-center gap-2 text-xs">
+                    Size
+                    <Input
+                      type="number"
+                      min={4}
+                      max={200}
+                      className="h-9 w-20"
+                      value={Math.round(selected.fontFrac * (sizes[selected.page]?.height ?? 1))}
+                      onChange={(e) =>
+                        patchSel((x) => (x.kind === "text" ? { ...x, fontFrac: (Number(e.target.value) || 1) / (sizes[x.page]?.height ?? 1) } : x))
+                      }
+                    />
                   </label>
-                  <button className={`sig-b${selected.bold ? " on" : ""}`} aria-pressed={!!selected.bold} title="Bold"
-                    onClick={() => setEls((es) => es.map((x) => (x.id === selected.id && x.kind === "text" ? { ...x, bold: !x.bold } : x)))}><b>B</b></button>
-                  <input type="color" value={selected.color} onChange={(e) => setEls((es) => es.map((x) => (x.id === selected.id ? { ...x, color: e.target.value } : x)))} />
+                  <Toggle
+                    variant="outline"
+                    pressed={!!selected.bold}
+                    onPressedChange={() => patchSel((x) => (x.kind === "text" ? { ...x, bold: !x.bold } : x))}
+                    aria-label="Bold"
+                  >
+                    <Bold />
+                  </Toggle>
+                  <input
+                    type="color"
+                    value={selected.color}
+                    onChange={(e) => patchSel((x) => ({ ...x, color: e.target.value }))}
+                    className="size-9 cursor-pointer rounded-md border bg-transparent p-0"
+                  />
                 </>
               ) : (
-                <button className="link" onClick={() => setCrop({ id: selected.id, rect: null })}>✂️ Crop</button>
+                <Button variant="ghost" size="sm" onClick={() => setCrop({ id: selected.id, rect: null })}>
+                  <CropIcon /> Crop
+                </Button>
               )}
-              <button className="link danger" onClick={deleteSelected}>🗑️ Delete</button>
+              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={deleteSelected}>
+                <Trash2 /> Delete
+              </Button>
             </div>
           )}
 
-          <button className="primary" disabled={!els.length || running} onClick={bake}>
+          <Button size="lg" className="mt-6 w-full" disabled={!els.length || running} onClick={bake}>
+            {running && <Loader2 className="animate-spin" />}
             {running ? "Baking…" : "Preview & download"}
-          </button>
+          </Button>
         </>
       ) : file ? (
-        <p className="hint-line">Loading PDF…</p>
+        <p className="text-muted-foreground mt-6 text-sm">Loading PDF…</p>
       ) : null}
     </section>
   );

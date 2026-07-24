@@ -1,3 +1,4 @@
+import { cn } from "../../lib/utils";
 import type { Dir, El } from "./types";
 
 // Handle position (as % of the box) + resize cursor, keyed by direction.
@@ -35,15 +36,24 @@ export default function ElementBox({
 
   return (
     <div
-      className={`el-box ${el.kind}${selected ? " sel" : ""}`}
+      data-el
+      className={cn(
+        "absolute box-border cursor-move",
+        el.kind === "text" && "inline-block whitespace-nowrap",
+        selected && "outline-primary outline-2"
+      )}
       style={style}
       onPointerDown={(e) => onBodyDown(el, e)}
     >
-      {el.kind === "image" ? <img src={el.src} alt="" draggable={false} /> : <span className="el-text">{el.text || " "}</span>}
+      {el.kind === "image" ? (
+        <img src={el.src} alt="" draggable={false} className="pointer-events-none block h-full w-full object-fill drop-shadow-sm" />
+      ) : (
+        <span className={cn("pointer-events-none leading-none", el.bold && "font-bold")}>{el.text || " "}</span>
+      )}
       {handles.map((h) => (
         <div
           key={h.dir}
-          className="el-handle"
+          className="border-primary bg-card absolute size-3 -translate-x-1/2 -translate-y-1/2 rounded-[3px] border-2"
           style={{ left: h.left, top: h.top, cursor: h.cursor }}
           onPointerDown={(e) => onHandleDown(el, h.dir, e)}
         />

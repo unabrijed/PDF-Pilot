@@ -1,6 +1,8 @@
 import { useState } from "react";
-import FileStaging from "../../components/FileStaging";
-import ResultsActions from "../../components/ResultsActions";
+import ToolShell from "../../components/ToolShell";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
 import { explodePdf, extractPages } from "../../lib/pdf";
 import { stem } from "../../lib/names";
 import { useToolRun } from "../../lib/useToolRun";
@@ -9,7 +11,7 @@ import type { NamedBytes } from "../../lib/zip";
 export default function Split() {
   const [mode, setMode] = useState<"range" | "each">("range");
   const [ranges, setRanges] = useState("");
-  const { files, running, error, outputs, start } = useToolRun(
+  const run = useToolRun(
     async (files, read) => {
       const out: NamedBytes[] = [];
       for (const f of files) {
@@ -26,34 +28,38 @@ export default function Split() {
   );
 
   return (
-    <section className="tool">
-      <h1>✂️ Split PDF</h1>
-      <p className="tool-sub">Extract specific pages, or burst into single pages.</p>
-      <FileStaging accepts="pdf" />
-      <div className="field">
-        <span>Mode</span>
-        <div className="radios">
-          <label><input type="radio" name="mode" checked={mode === "range"} onChange={() => setMode("range")} /> Extract pages</label>
-          <label><input type="radio" name="mode" checked={mode === "each"} onChange={() => setMode("each")} /> Every page separately</label>
-        </div>
+    <ToolShell slug="split" sub="Extract specific pages, or burst into single pages." verb="Split" busy="Splitting" run={run}>
+      <div className="space-y-2">
+        <Label>Mode</Label>
+        <RadioGroup value={mode} onValueChange={(v) => setMode(v as "range" | "each")} className="flex flex-wrap gap-2">
+          {[
+            { value: "range", label: "Extract pages" },
+            { value: "each", label: "Every page separately" },
+          ].map((o) => (
+            <Label
+              key={o.value}
+              className="bg-card hover:border-primary has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-accent flex cursor-pointer items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-normal transition-colors"
+            >
+              <RadioGroupItem value={o.value} /> {o.label}
+            </Label>
+          ))}
+        </RadioGroup>
       </div>
+
       {mode === "range" && (
-        <label className="field">
-          <span>Pages <em>(e.g. 1-3,5,8-)</em></span>
-          <input
-            type="text"
+        <div className="space-y-2">
+          <Label htmlFor="ranges">
+            Pages <span className="text-muted-foreground font-normal">(e.g. 1-3,5,8-)</span>
+          </Label>
+          <Input
+            id="ranges"
             value={ranges}
             placeholder="1-3,5"
             onChange={(e) => setRanges(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") start(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") run.start(); }}
           />
-        </label>
+        </div>
       )}
-      <button className="primary" disabled={!files.length || running} onClick={start}>
-        {running ? "Splitting…" : "Split PDF"}
-      </button>
-      {error && <p className="msg error">⚠️ {error}</p>}
-      {outputs.length > 0 && <ResultsActions items={outputs} currentSlug="split" />}
-    </section>
+    </ToolShell>
   );
 }

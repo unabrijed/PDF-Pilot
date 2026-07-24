@@ -30,11 +30,17 @@ export default function RectSelect({ src, rect, onRect }: {
   const up = () => { start.current = null; };
 
   return (
-    <div ref={boxRef} className="rect-select" onPointerDown={down} onPointerMove={move} onPointerUp={up}>
-      <img src={src} alt="Page preview" draggable={false} />
+    <div
+      ref={boxRef}
+      className="relative max-w-md cursor-crosshair touch-none overflow-hidden rounded-lg border select-none"
+      onPointerDown={down}
+      onPointerMove={move}
+      onPointerUp={up}
+    >
+      <img src={src} alt="Page preview" draggable={false} className="pointer-events-none block w-full bg-white" />
       {rect && rect.w > 0 && (
         <div
-          className="rect-sel-box"
+          className="border-primary pointer-events-none absolute border-2 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
           style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.w * 100}%`, height: `${rect.h * 100}%` }}
         />
       )}

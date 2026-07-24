@@ -1,49 +1,45 @@
 import { useState } from "react";
-import FileStaging from "../../components/FileStaging";
-import ResultsActions from "../../components/ResultsActions";
+import ToolShell from "../../components/ToolShell";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Slider } from "../../components/ui/slider";
 import { watermarkPdf } from "../../lib/pdf";
-import { stem } from "../../lib/names";
-import { useToolRun } from "../../lib/useToolRun";
+import { perFile, useToolRun } from "../../lib/useToolRun";
 
 export default function Watermark() {
   const [text, setText] = useState("");
   const [opacity, setOpacity] = useState(0.25);
-  const { files, running, progress, error, outputs, start } = useToolRun(
-    async (files, read, setProgress) => {
-      const out = [];
-      for (let i = 0; i < files.length; i++) {
-        setProgress(i + 1);
-        out.push({ name: `${stem(files[i].name)}-watermarked.pdf`, data: await watermarkPdf(await read(files[i]), text.trim(), opacity) });
-      }
-      return out;
-    },
-    { guard: () => (text.trim() ? null : "Enter watermark text.") }
-  );
+  const run = useToolRun(perFile("watermarked", (bytes) => watermarkPdf(bytes, text.trim(), opacity)), {
+    guard: () => (text.trim() ? null : "Enter watermark text."),
+  });
 
   return (
-    <section className="tool">
-      <h1>💧 Watermark</h1>
-      <p className="tool-sub">Stamp text diagonally across every page.</p>
-      <FileStaging accepts="pdf" />
-      <label className="field">
-        <span>Text</span>
-        <input
-          type="text"
+    <ToolShell
+      slug="watermark"
+      sub="Stamp text diagonally across every page."
+      verb="Watermark"
+      busy="Stamping"
+      label={run.files.length > 1 ? undefined : "Add watermark"}
+      run={run}
+      disabled={!text.trim()}
+    >
+      <div className="space-y-2">
+        <Label htmlFor="wm">Text</Label>
+        <Input
+          id="wm"
           value={text}
           placeholder="CONFIDENTIAL"
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") start(); }}
+          onKeyDown={(e) => { if (e.key === "Enter") run.start(); }}
         />
-      </label>
-      <label className="field">
-        <span>Opacity <em>({Math.round(opacity * 100)}%)</em></span>
-        <input type="range" min={0.05} max={0.6} step={0.05} value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} />
-      </label>
-      <button className="primary" disabled={!files.length || running} onClick={start}>
-        {running ? `Stamping ${progress}/${files.length}…` : files.length > 1 ? `Watermark ${files.length} PDFs` : "Add watermark"}
-      </button>
-      {error && <p className="msg error">⚠️ {error}</p>}
-      {outputs.length > 0 && <ResultsActions items={outputs} currentSlug="watermark" />}
-    </section>
+      </div>
+
+      <div className="space-y-2">
+        <Label>
+          Opacity <span className="text-muted-foreground font-normal">({Math.round(opacity * 100)}%)</span>
+        </Label>
+        <Slider min={0.05} max={0.6} step={0.05} value={[opacity]} onValueChange={([v]) => setOpacity(v)} />
+      </div>
+    </ToolShell>
   );
 }

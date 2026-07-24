@@ -1,15 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import FileStaging from "../../components/FileStaging";
-import ResultsActions from "../../components/ResultsActions";
-import Select from "../../components/Select";
+import { useRef, useState } from "react";
+import OptionSelect from "../../components/OptionSelect";
 import SignatureCreator, { type SignaturePadHandle } from "../../components/SignatureCreator";
+import ToolShell from "../../components/ToolShell";
 import { stampSignature } from "../../lib/pdf";
-import { pdfToThumbs } from "../../lib/render";
-import { stem } from "../../lib/names";
-import { useToolRun } from "../../lib/useToolRun";
-import { getBytes } from "../../workspace";
+import { perFile, useToolRun } from "../../lib/useToolRun";
+import { useThumbs } from "../../lib/useThumbs";
 
 type Pos = { xFrac: number; yFrac: number };
+type Where = "last" | "first" | "all";
 
 /** Page preview with the signature overlaid; click or drag to place it. */
 function Placer({ page, sig, pos, onPos }: { page: string; sig: string; pos: Pos; onPos: (p: Pos) => void }) {
@@ -23,13 +21,19 @@ function Placer({ page, sig, pos, onPos }: { page: string; sig: string; pos: Pos
   return (
     <div
       ref={ref}
-      className="placer"
+      className="relative max-w-md cursor-crosshair touch-none overflow-hidden rounded-lg border select-none"
       onPointerDown={(e) => { dragging.current = true; ref.current!.setPointerCapture(e.pointerId); onPos(frac(e)); }}
       onPointerMove={(e) => { if (dragging.current) onPos(frac(e)); }}
       onPointerUp={() => { dragging.current = false; }}
     >
-      <img src={page} className="placer-page" alt="Page preview" draggable={false} />
-      <img src={sig} className="placer-sig" alt="" draggable={false} style={{ left: `${pos.xFrac * 100}%`, top: `${pos.yFrac * 100}%` }} />
+      <img src={page} className="pointer-events-none block w-full bg-white" alt="Page preview" draggable={false} />
+      <img
+        src={sig}
+        alt=""
+        draggable={false}
+        className="pointer-events-none absolute w-[28%] -translate-x-1/2 -translate-y-1/2 drop-shadow"
+        style={{ left: `${pos.xFrac * 100}%`, top: `${pos.yFrac * 100}%` }}
+      />
     </div>
   );
 }
@@ -37,69 +41,54 @@ function Placer({ page, sig, pos, onPos }: { page: string; sig: string; pos: Pos
 export default function Sign() {
   const padRef = useRef<SignaturePadHandle>(null);
   const [sigUrl, setSigUrl] = useState<string | null>(null);
-  const [where, setWhere] = useState<"last" | "first" | "all">("last");
-  const [pageThumb, setPageThumb] = useState("");
+  const [where, setWhere] = useState<Where>("last");
   const [pos, setPos] = useState<Pos>({ xFrac: 0.8, yFrac: 0.92 });
 
-  const { files, running, progress, error, outputs, start } = useToolRun(
-    async (files, read, setProgress) => {
+  const run = useToolRun(
+    perFile("signed", (bytes) => {
       const png = padRef.current?.toPng();
       if (!png) throw new Error("Draw your signature first.");
-      const out = [];
-      for (let i = 0; i < files.length; i++) {
-        setProgress(i + 1);
-        out.push({ name: `${stem(files[i].name)}-signed.pdf`, data: await stampSignature(await read(files[i]), png, { where, pos }) });
-      }
-      return out;
-    },
+      return stampSignature(bytes, png, { where, pos });
+    }),
     { guard: () => (sigUrl ? null : "Draw your signature first.") }
   );
-  const file = files[0];
 
-  useEffect(() => {
-    if (!file) { setPageThumb(""); return; }
-    let alive = true;
-    setPageThumb("");
-    getBytes(file)
-      .then((b) => pdfToThumbs(b, 440, [where === "last" ? -1 : 1]))
-      .then(([t]) => { if (alive) setPageThumb(t); })
-      .catch(() => { if (alive) setPageThumb(""); }); // preview is optional; stamping still works
-    return () => { alive = false; };
-  }, [file?.id, where]); // eslint-disable-line react-hooks/exhaustive-deps
+  const file = run.files[0];
+  const { thumbs } = useThumbs(file, 440, [where === "last" ? -1 : 1]);
+  const pageThumb = thumbs[0];
 
   return (
-    <section className="tool">
-      <h1>✍️ Sign PDF</h1>
-      <p className="tool-sub">Draw, type, or upload a signature, then click on the preview to place it.</p>
-      <FileStaging accepts="pdf" />
+    <ToolShell
+      slug="sign"
+      sub="Draw, type, or upload a signature, then click on the preview to place it."
+      verb="Sign"
+      busy="Signing"
+      label="Sign PDF"
+      run={run}
+      disabled={!sigUrl}
+    >
       <SignatureCreator ref={padRef} onInk={(has) => setSigUrl(has ? padRef.current?.toDataUrl() ?? null : null)} />
-      <div className="field">
-        <span>Place on</span>
-        <Select
-          ariaLabel="Place on"
-          value={where}
-          onChange={(v) => setWhere(v as "last" | "first" | "all")}
-          options={[
-            { value: "last", label: "Last page" },
-            { value: "first", label: "First page" },
-            { value: "all", label: "Every page" },
-          ]}
-        />
-      </div>
+
+      <OptionSelect
+        label="Place on"
+        value={where}
+        onChange={setWhere}
+        options={[
+          { value: "last", label: "Last page" },
+          { value: "first", label: "First page" },
+          { value: "all", label: "Every page" },
+        ]}
+      />
+
       {sigUrl && pageThumb && (
-        <>
+        <div className="space-y-2">
           <Placer page={pageThumb} sig={sigUrl} pos={pos} onPos={setPos} />
-          <p className="hint-line">
+          <p className="text-muted-foreground text-sm">
             {where === "all" ? "Same spot on every page." : `Previewing the ${where} page.`}
-            {files.length > 1 && " Applied to all staged PDFs at the same relative spot."}
+            {run.files.length > 1 && " Applied to all staged PDFs at the same relative spot."}
           </p>
-        </>
+        </div>
       )}
-      <button className="primary" disabled={!files.length || !sigUrl || running} onClick={start}>
-        {running ? `Signing ${progress}/${files.length}…` : "Sign PDF"}
-      </button>
-      {error && <p className="msg error">⚠️ {error}</p>}
-      {outputs.length > 0 && <ResultsActions items={outputs} currentSlug="sign" />}
-    </section>
+    </ToolShell>
   );
 }

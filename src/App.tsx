@@ -1,7 +1,11 @@
 import { lazy, Suspense, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { Compass, Moon, Sun } from "lucide-react";
 import Home from "./components/Home";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { Button } from "./components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
+import { Toaster } from "./components/ui/sonner";
 import { tools } from "./tools/registry";
 
 // Retry a dynamic import once before giving up, so a transient chunk fetch
@@ -28,12 +32,9 @@ const Ocr = lazy(() => retry(() => import("./tools/ocr/Ocr")));
 const Crop = lazy(() => retry(() => import("./tools/crop/Crop")));
 const PdfEditor = lazy(() => retry(() => import("./tools/pdf-editor/PdfEditor")));
 
-const closeMenu = (e: { currentTarget: HTMLElement }) =>
-  e.currentTarget.closest("details")?.removeAttribute("open");
-
 function Logo() {
   return (
-    <svg className="logo" viewBox="0 0 64 64" width="20" height="20" aria-hidden="true">
+    <svg className="text-primary size-5 shrink-0" viewBox="0 0 64 64" width="20" height="20" aria-hidden="true">
       <g stroke="currentColor" strokeWidth="6" strokeLinecap="round" fill="none">
         <path d="M6 46h52" />
         <path d="M19 18v28M45 18v28" />
@@ -46,50 +47,58 @@ function Logo() {
 
 function NotFound() {
   return (
-    <div className="crash">
-      <div className="crash-icon">🧭</div>
-      <h2>Nothing here</h2>
-      <p><Link className="link" to="/">Back to all tools</Link></p>
+    <div className="bg-card mx-auto my-16 max-w-md rounded-2xl border p-9 text-center shadow-sm">
+      <Compass className="text-muted-foreground mx-auto size-9" />
+      <h2 className="mt-3 text-xl font-semibold">Nothing here</h2>
+      <Button variant="link" asChild><Link to="/">Back to all tools</Link></Button>
     </div>
   );
 }
 
 export default function App() {
   const { pathname } = useLocation();
-  const [theme, setTheme] = useState(() => (document.documentElement.dataset.theme === "dark" ? "dark" : "light"));
+  const [theme, setTheme] = useState(() => (document.documentElement.classList.contains("dark") ? "dark" : "light"));
   const flipTheme = () => {
     const t = theme === "dark" ? "light" : "dark";
-    document.documentElement.dataset.theme = t;
+    document.documentElement.classList.toggle("dark", t === "dark");
     localStorage.theme = t;
     setTheme(t);
   };
 
   return (
-    <div className="app">
-      <header className="topbar">
-        <Link to="/" className="brand"><Logo /> Bridge <span className="brand-sub">PDF tools</span></Link>
-        <div className="top-actions">
-        <button className="theme-btn" onClick={flipTheme} aria-label="Toggle dark mode" title="Toggle dark mode">
-          {theme === "dark" ? "☀️" : "🌙"}
-        </button>
-        <details className="menu">
-          <summary>All tools</summary>
-          <div className="menu-pop">
-            {tools.map((t) =>
-              t.status === "ready" ? (
-                <Link key={t.slug} to={`/${t.slug}`} onClick={closeMenu}>{t.icon} {t.title}</Link>
-              ) : (
-                <span key={t.slug} className="disabled">{t.icon} {t.title} <em>soon</em></span>
-              )
-            )}
-          </div>
-        </details>
+    <div className="flex min-h-screen flex-col">
+      <header className="bg-card/80 sticky top-0 z-30 flex items-center justify-between border-b px-6 py-3 backdrop-blur-md backdrop-saturate-150">
+        <Link to="/" className="font-display inline-flex items-center gap-2.5 text-xl font-bold tracking-tight">
+          <Logo /> Bridge
+          <span className="text-muted-foreground font-sans text-xs font-medium tracking-normal">PDF tools</span>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" className="rounded-full" onClick={flipTheme} aria-label="Toggle dark mode">
+            {theme === "dark" ? <Sun /> : <Moon />}
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">All tools</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
+              {tools.map((t) => {
+                const Icon = t.icon;
+                return (
+                  <DropdownMenuItem key={t.slug} asChild disabled={t.status !== "ready"}>
+                    <Link to={`/${t.slug}`}><Icon /> {t.title}</Link>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
-      <main className="content">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 pt-12 pb-8">
         <ErrorBoundary key={pathname}>
-          <Suspense fallback={<p className="hint-line">Loading…</p>}>
+          <Suspense fallback={<p className="text-muted-foreground text-sm">Loading…</p>}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/unlock" element={<Unlock />} />
@@ -114,7 +123,11 @@ export default function App() {
         </ErrorBoundary>
       </main>
 
-      <footer className="foot">Files stay in your browser. Nothing is uploaded.</footer>
+      <footer className="text-muted-foreground py-7 text-center text-xs">
+        Files stay in your browser. Nothing is uploaded.
+      </footer>
+
+      <Toaster position="bottom-center" theme={theme as "light" | "dark"} />
     </div>
   );
 }

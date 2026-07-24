@@ -1,4 +1,11 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { Bold } from "lucide-react";
+import { dataUrlToBytes } from "../lib/names";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Toggle } from "./ui/toggle";
+import { cn } from "../lib/utils";
 
 export interface SignaturePadHandle {
   toPng: () => Uint8Array | null; // null if empty
@@ -12,13 +19,6 @@ const TYPE_FONTS = [
   { value: "Georgia,'Times New Roman',serif", label: "Serif" },
   { value: "system-ui,-apple-system,sans-serif", label: "Sans" },
 ];
-
-function dataUrlToBytes(url: string): Uint8Array {
-  const bin = atob(url.split(",")[1]);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return arr;
-}
 
 /** Render typed text onto a tightly sized transparent canvas → PNG data URL. */
 function renderType(text: string, font: string, bold: boolean, color: string): string | null {
@@ -40,6 +40,20 @@ function renderType(text: string, font: string, bold: boolean, color: string): s
   ctx.textBaseline = "middle";
   ctx.fillText(t, pad, h / 2);
   return c.toDataURL("image/png");
+}
+
+function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="text-muted-foreground inline-flex items-center gap-2 text-xs">
+      Color
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="size-8 cursor-pointer rounded-md border bg-transparent p-0"
+      />
+    </label>
+  );
 }
 
 /**
@@ -143,84 +157,83 @@ const SignatureCreator = forwardRef<SignaturePadHandle, { onInk: (has: boolean) 
     };
 
     return (
-      <div className="field sig">
-        <div className="sig-tabs" role="tablist">
-          {(["draw", "type", "upload"] as Mode[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="tab"
-              aria-selected={mode === m}
-              className={`sig-tab${mode === m ? " on" : ""}`}
-              onClick={() => switchMode(m)}
-            >
-              {m === "draw" ? "Draw" : m === "type" ? "Type" : "Upload"}
-            </button>
-          ))}
-        </div>
+      <Tabs value={mode} onValueChange={(v) => switchMode(v as Mode)}>
+        <TabsList>
+          <TabsTrigger value="draw">Draw</TabsTrigger>
+          <TabsTrigger value="type">Type</TabsTrigger>
+          <TabsTrigger value="upload">Upload</TabsTrigger>
+        </TabsList>
 
-        {mode === "draw" && (
-          <>
-            <canvas
-              ref={canvasRef}
-              className="sigpad"
-              width={520}
-              height={180}
-              onPointerDown={down}
-              onPointerMove={move}
-              onPointerUp={up}
-              onPointerLeave={up}
-            />
-            <div className="sig-controls">
-              <label className="sig-color">Color <input type="color" value={color} onChange={(e) => setColor(e.target.value)} /></label>
-              <button type="button" className="link" onClick={clearDraw}>Clear</button>
-            </div>
-          </>
-        )}
-
-        {mode === "type" && (
-          <>
-            <input
-              className="sig-text"
-              value={text}
-              placeholder="Type your name"
-              style={{ fontFamily: font, fontWeight: bold ? 700 : 400, color }}
-              onChange={(e) => { setText(e.target.value); onInk(!!e.target.value.trim()); }}
-            />
-            <div className="sig-controls">
-              <div className="sig-fonts">
-                {TYPE_FONTS.map((f) => (
-                  <button
-                    key={f.value}
-                    type="button"
-                    className={`sig-font${font === f.value ? " on" : ""}`}
-                    style={{ fontFamily: f.value }}
-                    onClick={() => { setFont(f.value); ping(); }}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-              <button type="button" className={`sig-b${bold ? " on" : ""}`} onClick={() => { setBold((b) => !b); ping(); }} aria-pressed={bold} title="Bold"><b>B</b></button>
-              <label className="sig-color">Color <input type="color" value={color} onChange={(e) => { setColor(e.target.value); ping(); }} /></label>
-            </div>
-          </>
-        )}
-
-        {mode === "upload" && (
-          <div className="sig-upload">
-            {uploaded ? (
-              <img src={uploaded} alt="Signature" className="sig-preview" />
-            ) : (
-              <p className="hint-line">Pick a PNG or JPG of your signature.</p>
-            )}
-            <label className="link sig-pick">
-              {uploaded ? "Choose another" : "Choose image"}
-              <input type="file" accept="image/png,image/jpeg" hidden onChange={onUpload} />
-            </label>
+        <TabsContent value="draw" className="space-y-3">
+          <canvas
+            ref={canvasRef}
+            width={520}
+            height={180}
+            className="block h-44 w-full cursor-crosshair touch-none rounded-lg border bg-white"
+            onPointerDown={down}
+            onPointerMove={move}
+            onPointerUp={up}
+            onPointerLeave={up}
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <ColorPicker value={color} onChange={setColor} />
+            <Button type="button" variant="ghost" size="sm" onClick={clearDraw}>Clear</Button>
           </div>
-        )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="type" className="space-y-3">
+          <Input
+            value={text}
+            placeholder="Type your name"
+            className="h-16 text-center !text-2xl"
+            style={{ fontFamily: font, fontWeight: bold ? 700 : 400, color }}
+            onChange={(e) => { setText(e.target.value); onInk(!!e.target.value.trim()); }}
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex gap-1.5">
+              {TYPE_FONTS.map((f) => (
+                <Button
+                  key={f.value}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={cn(font === f.value && "border-primary ring-ring/40 ring-2")}
+                  style={{ fontFamily: f.value }}
+                  onClick={() => { setFont(f.value); ping(); }}
+                >
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+            <Toggle
+              size="sm"
+              variant="outline"
+              pressed={bold}
+              onPressedChange={(v) => { setBold(v); ping(); }}
+              aria-label="Bold"
+            >
+              <Bold />
+            </Toggle>
+            <ColorPicker value={color} onChange={(v) => { setColor(v); ping(); }} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="upload">
+          <div className="bg-card rounded-lg border border-dashed p-5 text-center">
+            {uploaded ? (
+              <img src={uploaded} alt="Signature" className="mx-auto mb-3 max-h-40 max-w-full" />
+            ) : (
+              <p className="text-muted-foreground mb-2 text-sm">Pick a PNG or JPG of your signature.</p>
+            )}
+            <Button type="button" variant="outline" size="sm" asChild>
+              <label className="cursor-pointer">
+                {uploaded ? "Choose another" : "Choose image"}
+                <input type="file" accept="image/png,image/jpeg" hidden onChange={onUpload} />
+              </label>
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
     );
   }
 );
