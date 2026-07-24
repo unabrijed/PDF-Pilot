@@ -6,6 +6,8 @@ import type { FileType } from "../tools/registry";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 
+const pasteKey = () => (/Mac|iP(hone|ad)/.test(navigator.platform || navigator.userAgent) ? "⌘" : "Ctrl+");
+
 export default function FileStaging({ accepts = "pdf" }: { accepts?: FileType }) {
   const { files, addFiles, removeFile, clear } = useWorkspace();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +44,9 @@ export default function FileStaging({ accepts = "pdf" }: { accepts?: FileType })
         />
         <Upload className="text-primary mx-auto size-7" />
         <div className="mt-3 font-semibold">Drop {kind.label} here, or click to browse</div>
-        <div className="text-muted-foreground mt-1 text-sm">Files stay on this device</div>
+        <div className="text-muted-foreground mt-1 text-sm">
+          You can paste with {pasteKey()}V too. Files stay on this device.
+        </div>
       </div>
 
       {files.length > 0 && (

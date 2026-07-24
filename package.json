@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "check": "node scripts/check.mjs",
+    "check": "node scripts/check.mjs && node scripts/check-clipboard.mjs",
     "verify": "npm run check && npm run build",
     "prepare": "(git config core.hooksPath .githooks || true) && node scripts/sync-ocr-assets.mjs"
   },

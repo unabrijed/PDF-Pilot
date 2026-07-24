@@ -1,4 +1,6 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
+import { filesFromClipboard, isEditableTarget } from "./lib/clipboard";
 
 export interface WorkFile {
   id: string;
@@ -41,6 +43,24 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }),
     [files]
   );
+
+  // Paste files or a screenshot anywhere on the page. Bound once here rather than
+  // per tool, so every tool gets it through the same staging list.
+  const pasteCount = useRef(1);
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      if (isEditableTarget(e.target)) return; // let password and text fields paste normally
+      const incoming = filesFromClipboard(e.clipboardData, pasteCount.current);
+      if (!incoming.length) return;
+      e.preventDefault();
+      pasteCount.current += incoming.length;
+      setFiles((cur) => [...cur, ...toWorkFiles(incoming)]);
+      toast.success(`Pasted ${incoming.length} file${incoming.length > 1 ? "s" : ""}`);
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, []);
+
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
 
