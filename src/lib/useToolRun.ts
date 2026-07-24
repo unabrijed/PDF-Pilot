@@ -2,6 +2,7 @@ import { useState } from "react";
 import { getBytes, useWorkspace, type WorkFile } from "../workspace";
 import { matches } from "./filetypes";
 import type { FileType } from "../tools/registry";
+import { stem } from "./names";
 import type { NamedBytes } from "./zip";
 
 export interface RunApi {
@@ -19,6 +20,31 @@ type Process = (
   setProgress: (n: number) => void,
   fail: (msg: string) => void // report a per-file soft failure; successes still ship
 ) => Promise<NamedBytes[]>;
+
+/**
+ * The common shape: run `fn` over each file in turn, naming the output
+ * `<stem>-<suffix>.pdf`. A file that throws is reported and skipped, so one bad
+ * PDF never sinks the rest of the batch.
+ */
+export function perFile(
+  suffix: string,
+  fn: (bytes: Uint8Array, file: WorkFile) => Promise<Uint8Array>,
+  message: (name: string, e: unknown) => string = (name, e) =>
+    `${name}: ${e instanceof Error ? e.message : String(e)}`
+): Process {
+  return async (files, read, setProgress, fail) => {
+    const out: NamedBytes[] = [];
+    for (let i = 0; i < files.length; i++) {
+      setProgress(i + 1);
+      try {
+        out.push({ name: `${stem(files[i].name)}-${suffix}.pdf`, data: await fn(await read(files[i]), files[i]) });
+      } catch (e) {
+        fail(message(files[i].name, e));
+      }
+    }
+    return out;
+  };
+}
 
 /**
  * Shared tool state machine: staged files → sequential processing → outputs/error.
