@@ -1,0 +1,125 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Self-hosted so the PWA renders correctly offline. No external font requests. */
+@font-face { font-family: "Clash Display"; src: url("/fonts/clash-display-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Clash Display"; src: url("/fonts/clash-display-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Clash Display"; src: url("/fonts/clash-display-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("/fonts/general-sans-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("/fonts/general-sans-500.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("/fonts/general-sans-600.woff2") format("woff2"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "General Sans"; src: url("/fonts/general-sans-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+
+:root {
+  --radius: 0.75rem;
+
+  --background: #f5f4ef;
+  --foreground: #1b1830;
+  --card: #ffffff;
+  --card-foreground: #1b1830;
+  --popover: #ffffff;
+  --popover-foreground: #1b1830;
+  --primary: #5b3df5;
+  --primary-foreground: #ffffff;
+  --secondary: #faf9f5;
+  --secondary-foreground: #1b1830;
+  --muted: #faf9f5;
+  --muted-foreground: #6c687f;
+  --accent: #ece7ff;
+  --accent-foreground: #5b3df5;
+  --destructive: #e0393f;
+  --destructive-foreground: #ffffff;
+  --border: #e8e4da;
+  --input: #e8e4da;
+  --ring: #5b3df5;
+  --success: #12a150;
+
+  /* Bridge extras: the signature gradient and the coral it ends on. */
+  --brand-accent: #ff6b5e;
+  --gradient: linear-gradient(115deg, #5b3df5 0%, #8b5cf6 45%, #ff6b5e 100%);
+  --gradient-soft: linear-gradient(115deg, #ede9ff 0%, #f4ecff 50%, #ffece9 100%);
+
+  --chart-1: #5b3df5;
+  --chart-2: #8b5cf6;
+  --chart-3: #ff6b5e;
+  --chart-4: #12a150;
+  --chart-5: #6c687f;
+}
+
+.dark {
+  --background: #13111e;
+  --foreground: #ece9f6;
+  --card: #1d1a2b;
+  --card-foreground: #ece9f6;
+  --popover: #1d1a2b;
+  --popover-foreground: #ece9f6;
+  --primary: #7c62ff;
+  --primary-foreground: #ffffff;
+  --secondary: #232032;
+  --secondary-foreground: #ece9f6;
+  --muted: #232032;
+  --muted-foreground: #a29eb6;
+  --accent: #2a2450;
+  --accent-foreground: #b0a1ff;
+  --destructive: #ff6b6f;
+  --destructive-foreground: #13111e;
+  --border: #2e2a40;
+  --input: #2e2a40;
+  --ring: #7c62ff;
+  --success: #45d483;
+
+  --brand-accent: #ff7d72;
+  --gradient-soft: linear-gradient(115deg, #241f45 0%, #2a2350 50%, #3a2440 100%);
+}
+
+@theme inline {
+  --font-sans: "General Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Clash Display", system-ui, -apple-system, sans-serif;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-brand-accent: var(--brand-accent);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3 {
+    @apply font-display tracking-tight;
+  }
+}
