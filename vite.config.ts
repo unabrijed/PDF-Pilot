@@ -33,6 +33,9 @@ export default defineConfig({
       },
     }),
   ],
-  // Emscripten glue doesn't survive esbuild pre-bundling.
-  optimizeDeps: { exclude: ["@neslinesli93/qpdf-wasm"] },
+  // qpdf-wasm MUST be pre-bundled: the Emscripten glue is UMD and exports nothing
+  // in a browser, so serving it raw breaks `import createModule from …`. The
+  // optimizer's CJS interop gives it a real default export, and the require("fs")
+  // in its dead node branch resolves to a lazy browser-external shim.
+  optimizeDeps: { include: ["@neslinesli93/qpdf-wasm"] },
 });
