@@ -1,4 +1,4 @@
-# PDFPilot
+<img src="public/logo.svg" alt="PDFPilot" width="300">
 
 **PDFPilot** — a fully client-side PDF tools suite. Every tool runs in the browser, files never leave your device (no backend, no uploads). Its signature move: PDFPilot *flies your files* from one tool to the next ("Continue in →").
 

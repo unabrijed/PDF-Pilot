@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { Compass, Moon, Sun } from "lucide-react";
 import Home from "./components/Home";
@@ -6,7 +6,10 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { Button } from "./components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { Toaster } from "./components/ui/sonner";
-import { tools } from "./tools/registry";
+import { tools, toolBySlug } from "./tools/registry";
+
+const SITE_TITLE = "PDFPilot, PDF tools in your browser";
+const SITE_DESC = "Free PDF tools that run entirely in your browser. Nothing is uploaded.";
 
 // Retry a dynamic import once before giving up, so a transient chunk fetch
 // (or a stale hashed URL just after a PWA update) recovers silently. A second
@@ -55,6 +58,13 @@ function NotFound() {
 
 export default function App() {
   const { pathname } = useLocation();
+  useEffect(() => {
+    const tool = toolBySlug(pathname.slice(1));
+    document.title = tool ? `${tool.title} | PDFPilot` : SITE_TITLE;
+    document.querySelector('meta[name="description"]')?.setAttribute("content", tool ? tool.desc : SITE_DESC);
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", __SITE_URL__ + (tool ? pathname : "/"));
+  }, [pathname]);
+
   const [theme, setTheme] = useState(() => (document.documentElement.classList.contains("dark") ? "dark" : "light"));
   const flipTheme = () => {
     const t = theme === "dark" ? "light" : "dark";
