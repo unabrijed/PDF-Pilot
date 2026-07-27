@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "Bridge PDF tools",
-        short_name: "Bridge",
+        name: "PDFPilot PDF tools",
+        short_name: "PDFPilot",
         description: "Every PDF tool, entirely in your browser. Nothing uploaded.",
         theme_color: "#5b3df5",
         background_color: "#f5f4ef",

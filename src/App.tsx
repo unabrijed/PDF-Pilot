@@ -69,7 +69,7 @@ export default function App() {
     <div className="flex min-h-screen flex-col">
       <header className="bg-card/80 sticky top-0 z-30 flex items-center justify-between border-b px-6 py-3 backdrop-blur-md backdrop-saturate-150">
         <Link to="/" className="font-display inline-flex items-center gap-2.5 text-xl font-bold tracking-tight">
-          <Logo /> Bridge
+          <Logo /> PDFPilot
           <span className="text-muted-foreground font-sans text-xs font-medium tracking-normal">PDF tools</span>
         </Link>
 

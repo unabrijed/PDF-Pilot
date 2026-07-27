@@ -29,7 +29,7 @@ export default function ResultsActions({ items, currentSlug }: { items: NamedByt
           {items.length} file{items.length > 1 ? "s" : ""} ready
         </strong>
         {items.length > 1 && (
-          <Button size="sm" onClick={() => download(zipBlob(items), "bridge-results.zip")}>
+          <Button size="sm" onClick={() => download(zipBlob(items), "pdfpilot-results.zip")}>
             <FileArchive /> Download all (.zip)
           </Button>
         )}

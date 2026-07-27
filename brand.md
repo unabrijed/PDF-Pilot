@@ -1,9 +1,9 @@
-# Bridge brand
+# PDFPilot brand
 
-Bridge is a set of PDF tools that run entirely in the browser. The identity is
+PDFPilot is a set of PDF tools that run entirely in the browser. The identity is
 expressive and premium but calm: bold display type, a signature gradient, warm
-neutrals, and tactile motion. Files "cross the bridge" from one tool to the
-next, and nothing ever leaves the device.
+neutrals, and tactile motion. PDFPilot flies files from one tool to the
+next ("Continue in →"), and nothing ever leaves the device.
 
 ## Voice
 

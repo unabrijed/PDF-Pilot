@@ -36,7 +36,7 @@
   --ring: #5b3df5;
   --success: #12a150;
 
-  /* Bridge extras: the signature gradient and the coral it ends on. */
+  /* PDFPilot extras: the signature gradient and the coral it ends on. */
   --brand-accent: #ff6b5e;
   --gradient: linear-gradient(115deg, #5b3df5 0%, #8b5cf6 45%, #ff6b5e 100%);
   --gradient-soft: linear-gradient(115deg, #ede9ff 0%, #f4ecff 50%, #ffece9 100%);
