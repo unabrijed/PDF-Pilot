@@ -35,11 +35,9 @@ const PdfEditor = lazy(() => retry(() => import("./tools/pdf-editor/PdfEditor"))
 function Logo() {
   return (
     <svg className="text-primary size-5 shrink-0" viewBox="0 0 64 64" width="20" height="20" aria-hidden="true">
-      <g stroke="currentColor" strokeWidth="6" strokeLinecap="round" fill="none">
-        <path d="M6 46h52" />
-        <path d="M19 18v28M45 18v28" />
-        <path d="M19 22Q32 42 45 22" />
-        <path d="M19 22 6 46M45 22 58 46" />
+      <g stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M58 10 6 32l22 8 8 16z" />
+        <path d="M58 10 28 40" />
       </g>
     </svg>
   );
