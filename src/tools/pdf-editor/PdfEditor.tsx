@@ -267,7 +267,7 @@ export default function PdfEditor() {
   const patchSel = (fn: (x: El) => El) => setEls((es) => es.map((x) => (x.id === selectedId ? fn(x) : x)));
 
   return (
-    <section className="mx-auto w-full max-w-4xl">
+    <section className="mx-auto w-full max-w-4xl px-6 pt-10 pb-16">
       <ToolHeader
         slug="pdf-editor"
         sub="Add text, images, and signatures. Click a tool, then click a page to place it. Drag to move, drag a handle to resize."
@@ -287,7 +287,7 @@ export default function PdfEditor() {
           <p className="text-muted-foreground mt-6 text-sm">Baked result. Check the placement, then download.</p>
           <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3.5">
             {previewThumbs.map((t, i) => (
-              <figure key={i} className="bg-card m-0 rounded-lg border p-2">
+              <figure key={i} className="surface m-0 p-2">
                 <img src={t} alt={`Page ${i + 1}`} className="block w-full rounded border bg-white" />
               </figure>
             ))}
@@ -328,7 +328,7 @@ export default function PdfEditor() {
           </div>
 
           {sigOpen && (
-            <div className="bg-card mt-3 space-y-4 rounded-xl border p-4">
+            <div className="surface mt-3 space-y-4 p-4">
               <SignatureCreator ref={padRef} onInk={() => {}} />
               <Button size="sm" onClick={armSignature}>Use signature</Button>
             </div>
@@ -353,7 +353,7 @@ export default function PdfEditor() {
           ) : (
             <>
               {sizes.length > 1 && (
-                <div className="bg-card text-muted-foreground sticky top-[70px] z-5 mt-3 flex items-center gap-2.5 rounded-full border px-3.5 py-2 text-sm">
+                <div className="bg-card/90 text-muted-foreground sticky top-[72px] z-5 mt-3 flex items-center gap-2.5 rounded-full border px-3.5 py-2 text-sm shadow-sm backdrop-blur-md">
                   <span>Page</span>
                   <Input
                     type="number"
@@ -378,7 +378,7 @@ export default function PdfEditor() {
                 ref={scrollRef}
                 onScroll={onScroll}
                 className={cn(
-                  "bg-background relative mt-3 flex max-h-[70vh] flex-col gap-4 overflow-y-auto rounded-xl border p-1.5",
+                  "bg-muted/50 relative mt-3 flex max-h-[70vh] flex-col gap-4 overflow-y-auto rounded-xl border p-1.5",
                   pending && "cursor-crosshair"
                 )}
               >
@@ -411,7 +411,7 @@ export default function PdfEditor() {
           )}
 
           {selected && !crop && (
-            <div className="bg-card mt-4 flex flex-wrap items-center gap-2.5 rounded-lg border p-3">
+            <div className="surface mt-4 flex flex-wrap items-center gap-2.5 p-3">
               {selected.kind === "text" ? (
                 <>
                   <Input
@@ -459,7 +459,7 @@ export default function PdfEditor() {
             </div>
           )}
 
-          <Button size="lg" className="mt-6 w-full" disabled={!els.length || running} onClick={bake}>
+          <Button size="lg" className="mt-6 w-full rounded-full" disabled={!els.length || running} onClick={bake}>
             {running && <Loader2 className="animate-spin" />}
             {running ? "Baking…" : "Preview & download"}
           </Button>
