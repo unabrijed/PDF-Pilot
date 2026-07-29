@@ -1,4 +1,18 @@
 import { degrees, PDFDocument, type PDFFont, rgb, StandardFonts } from "pdf-lib";
+import { toPngBytes } from "./image.ts"; // explicit .ts so scripts/check.mjs can import this under Node
+
+/**
+ * Embed any image. PNG/JPG go straight in; anything else — or a CMYK/progressive
+ * JPEG that pdf-lib rejects — is re-encoded to PNG on a canvas first. The fast
+ * path matters: round-tripping a big JPEG through PNG would bloat the output.
+ */
+export async function embedImage(doc: PDFDocument, bytes: Uint8Array) {
+  try {
+    if (bytes[0] === 0x89 && bytes[1] === 0x50) return await doc.embedPng(bytes); // \x89PNG
+    if (bytes[0] === 0xff && bytes[1] === 0xd8) return await doc.embedJpg(bytes); // FFD8
+  } catch { /* fall through to the canvas re-encode */ }
+  return doc.embedPng(await toPngBytes(bytes));
+}
 
 /** Merge PDFs (in the given order) into one document. */
 export async function mergePdfs(list: Uint8Array[]): Promise<Uint8Array> {
@@ -246,9 +260,7 @@ export async function bakeEditorElements(pdfBytes: Uint8Array, elements: BakeEle
     if (!page) continue;
     const { width: W, height: H } = page.getSize();
     if (el.kind === "image") {
-      const isPng = el.bytes[0] === 0x89 && el.bytes[1] === 0x50; // \x89PNG, as in imagesToPdf
-      const img = isPng ? await doc.embedPng(el.bytes) : await doc.embedJpg(el.bytes);
-      page.drawImage(img, imageBoxToRect(el, W, H));
+      page.drawImage(await embedImage(doc, el.bytes), imageBoxToRect(el, W, H));
     } else {
       const face = el.bold
         ? (boldFont ??= await doc.embedFont(StandardFonts.HelveticaBold))
@@ -262,18 +274,13 @@ export async function bakeEditorElements(pdfBytes: Uint8Array, elements: BakeEle
   return doc.save();
 }
 
-/**
- * Combine images (JPG/PNG) into one PDF, one image per page sized to the image.
- * Note: pdf-lib's embedJpg can't handle CMYK or progressive JPEGs — those throw
- * (caught upstream and shown as a friendly error).
- */
+/** Combine images into one PDF, one image per page sized to the image. */
 export async function imagesToPdf(items: { name: string; bytes: Uint8Array }[]): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   for (const { name, bytes } of items) {
-    const isPng = bytes[0] === 0x89 && bytes[1] === 0x50; // \x89PNG
-    const isJpg = bytes[0] === 0xff && bytes[1] === 0xd8; // FFD8
-    if (!isPng && !isJpg) throw new Error(`${name}: only JPG and PNG images are supported.`);
-    const img = isPng ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+    const img = await embedImage(doc, bytes).catch(() => {
+      throw new Error(`${name}: could not read that image.`);
+    });
     const page = doc.addPage([img.width, img.height]);
     page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
   }
