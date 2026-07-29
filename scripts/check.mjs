@@ -83,7 +83,17 @@ assert.throws(() => parseRanges("4", 3), "parseRanges out-of-range throws");
 
 const png = new Uint8Array(Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64"));
 assert.equal((await PDFDocument.load(await imagesToPdf([{ name: "a.png", bytes: png }]))).getPageCount(), 1, "imagesToPdf → 1 page");
-assert.equal((await PDFDocument.load(await watermarkPdf(await pages(1), "DRAFT", 0.3))).getPageCount(), 1, "watermark keeps page count");
+// watermark: text, image, tiled and cornered variants all keep the page count
+for (const [what, opts] of [
+  ["text", { text: "DRAFT", opacity: 0.3 }],
+  ["image", { image: png, size: 0.3 }],
+  ["tiled", { text: "DRAFT", tile: true }],
+  ["cornered", { text: "DRAFT", position: "bottom-right", angle: 0, color: "#ff0000" }],
+]) {
+  assert.equal((await PDFDocument.load(await watermarkPdf(await pages(1), opts))).getPageCount(), 1, `${what} watermark keeps page count`);
+}
+const onePage = await pages(1);
+await assert.rejects(() => watermarkPdf(onePage, {}), "watermark with no text and no image rejects");
 assert.equal((await PDFDocument.load(await addPageNumbers(three, { position: "bottom-right", format: "n/N" }))).getPageCount(), 3, "page numbers keep page count");
 assert.equal((await PDFDocument.load(await stampSignature(await pages(1), png, { where: "last" }))).getPageCount(), 1, "signature keeps page count");
 assert.equal((await PDFDocument.load(await stampSignature(await pages(1), png, { where: "all", pos: { xFrac: 0.5, yFrac: 0.5 } }))).getPageCount(), 1, "positioned signature keeps page count");

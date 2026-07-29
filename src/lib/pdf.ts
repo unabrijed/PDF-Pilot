@@ -82,25 +82,83 @@ export async function explodePdf(bytes: Uint8Array): Promise<Uint8Array[]> {
   return results;
 }
 
-/** Draw `text` diagonally (45°) across every page at the given opacity. */
-export async function watermarkPdf(bytes: Uint8Array, text: string, opacity = 0.25): Promise<Uint8Array> {
+export type WatermarkPosition = "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
+export interface WatermarkOpts {
+  text?: string;
+  image?: Uint8Array;           // takes precedence over text
+  opacity?: number;             // 0–1
+  size?: number;                // fraction of the page's short side
+  angle?: number;               // degrees, counter-clockwise
+  color?: string;               // #rrggbb, text only
+  position?: WatermarkPosition;
+  tile?: boolean;               // repeat across the page, overriding position
+}
+
+const MARGIN = 36; // same inset stampSignature uses
+
+/** Centre point for a gw × gh stamp at the given corner, in points. */
+function anchor(pos: WatermarkPosition, pw: number, ph: number, gw: number, gh: number): [number, number] {
+  const l = MARGIN + gw / 2;
+  const r = pw - MARGIN - gw / 2;
+  const b = MARGIN + gh / 2;
+  const t = ph - MARGIN - gh / 2;
+  switch (pos) {
+    case "top-left": return [l, t];
+    case "top-right": return [r, t];
+    case "bottom-left": return [l, b];
+    case "bottom-right": return [r, b];
+    default: return [pw / 2, ph / 2];
+  }
+}
+
+/** Stamp text or an image across every page. */
+export async function watermarkPdf(bytes: Uint8Array, opts: WatermarkOpts): Promise<Uint8Array> {
+  const { image, opacity = 0.25, size = 0.125, angle = 45, color = "#808080", position = "center", tile = false } = opts;
+  // Helvetica encodes WinAnsi only, so anything outside it would throw on draw.
+  const label = (opts.text ?? "").replace(/[^\x20-\x7e]/g, "").trim();
+  if (!image && !label) throw new Error("Enter watermark text or pick an image.");
+
   const doc = await PDFDocument.load(bytes);
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const theta = Math.PI / 4;
+  const font = image ? undefined : await doc.embedFont(StandardFonts.Helvetica);
+  const img = image ? await embedImage(doc, image) : undefined;
+  const theta = (angle * Math.PI) / 180;
+  const cos = Math.cos(theta);
+  const sin = Math.sin(theta);
+
   for (const page of doc.getPages()) {
-    const { width, height } = page.getSize();
-    const size = Math.min(width, height) / 8;
-    const tw = font.widthOfTextAtSize(text, size);
-    // Centre the text's midpoint on the page centre (anchor is the text's start).
-    page.drawText(text, {
-      x: width / 2 - (tw / 2) * Math.cos(theta),
-      y: height / 2 - (tw / 2) * Math.sin(theta),
-      size,
-      font,
-      color: rgb(0.5, 0.5, 0.5),
-      opacity,
-      rotate: degrees(45),
-    });
+    const { width: pw, height: ph } = page.getSize();
+    const span = Math.min(pw, ph) * size;
+
+    // w × h is the stamp's unrotated box. Text draws from its baseline, so its
+    // height is 0 for placement; hSpan is the visual height used for spacing.
+    const w = img ? span : font!.widthOfTextAtSize(label, span);
+    const h = img ? span * (img.height / img.width) : 0;
+    const hSpan = img ? h : span;
+
+    // Rotated bounding box, for corner margins and tile spacing.
+    const gw = Math.abs(w * cos) + Math.abs(hSpan * sin);
+    const gh = Math.abs(w * sin) + Math.abs(hSpan * cos);
+
+    // pdf-lib rotates about the draw origin, so back off half the rotated box to
+    // land the stamp's centre on (cx, cy). With h = 0 this is the old text math.
+    const draw = (cx: number, cy: number) => {
+      const x = cx - (w / 2) * cos + (h / 2) * sin;
+      const y = cy - (w / 2) * sin - (h / 2) * cos;
+      const rotate = degrees(angle);
+      if (img) page.drawImage(img, { x, y, width: w, height: h, opacity, rotate });
+      else page.drawText(label, { x, y, size: span, font, color: hexRgb(color), opacity, rotate });
+    };
+
+    if (tile) {
+      // ponytail: fixed 1.6× spacing. Make it an option if anyone wants it denser.
+      const stepX = Math.max(gw * 1.6, 1);
+      const stepY = Math.max(gh * 1.6, 1);
+      for (let cx = stepX / 2; cx < pw + stepX; cx += stepX)
+        for (let cy = stepY / 2; cy < ph + stepY; cy += stepY) draw(cx, cy);
+    } else {
+      draw(...anchor(position, pw, ph, gw, gh));
+    }
   }
   return doc.save();
 }
@@ -237,7 +295,7 @@ export function imageBoxToRect(b: { x: number; y: number; w: number; h: number }
   return { x: b.x * W, y: (1 - b.y - b.h) * H, width: b.w * W, height: b.h * H };
 }
 
-const hexRgb = (hex: string) => {
+export const hexRgb = (hex: string) => {
   const n = parseInt(hex.slice(1), 16);
   return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
 };

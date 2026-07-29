@@ -37,7 +37,7 @@ export const tools: Tool[] = [
   { slug: "pdf-to-jpg", title: "PDF to JPG", desc: "Turn each page into an image.", icon: FileImage, status: "ready", category: "convert", accepts: "pdf", produces: "image" },
   { slug: "compress", title: "Compress PDF", desc: "Shrink file size (light, lossless).", icon: Minimize2, status: "ready", category: "secure", accepts: "pdf", produces: "pdf" },
   { slug: "page-numbers", title: "Page numbers", desc: "Stamp page numbers onto a PDF.", icon: Hash, status: "ready", category: "edit", accepts: "pdf", produces: "pdf" },
-  { slug: "watermark", title: "Watermark", desc: "Overlay text across every page.", icon: Droplets, status: "ready", category: "edit", accepts: "pdf", produces: "pdf" },
+  { slug: "watermark", title: "Watermark", desc: "Stamp text or a logo across every page.", icon: Droplets, status: "ready", category: "edit", accepts: "pdf", produces: "pdf" },
   { slug: "sign", title: "Sign PDF", desc: "Draw a signature and stamp it on.", icon: PenLine, status: "ready", category: "edit", accepts: "pdf", produces: "pdf" },
   { slug: "pdf-editor", title: "PDF Editor", desc: "Add text, images and signatures. Move, resize, crop, place on any page.", icon: PencilRuler, status: "ready", category: "edit", accepts: "pdf", produces: "pdf" },
   { slug: "organize", title: "Organize PDF", desc: "Reorder or delete pages.", icon: FolderTree, status: "ready", category: "organize", accepts: "pdf", produces: "pdf" },
