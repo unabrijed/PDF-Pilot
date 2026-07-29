@@ -19,7 +19,7 @@ export default class ErrorBoundary extends Component<{ children: ReactNode }, { 
   render() {
     if (!this.state.err) return this.props.children;
     return (
-      <div className="bg-card mx-auto my-16 max-w-md rounded-2xl border p-9 text-center shadow-sm">
+      <div className="surface mx-4 my-16 max-w-md p-9 text-center sm:mx-auto">
         <Wrench className="text-muted-foreground mx-auto size-9" />
         <h2 className="mt-3 text-xl font-semibold">This tool hit a snag</h2>
         <p className="text-muted-foreground mt-1.5 mb-5 text-sm">Your files are safe and nothing left your browser.</p>

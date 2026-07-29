@@ -1,12 +1,12 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
-import { Compass, Moon, Sun } from "lucide-react";
+import { ChevronDown, Moon, Sun } from "lucide-react";
 import Home from "./components/Home";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Button } from "./components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { Toaster } from "./components/ui/sonner";
-import { tools, toolBySlug } from "./tools/registry";
+import { categories, tools, toolBySlug } from "./tools/registry";
 
 const SITE_TITLE = "PDFPilot, PDF tools in your browser";
 const SITE_DESC = "Free PDF tools that run entirely in your browser. Nothing is uploaded.";
@@ -48,10 +48,12 @@ function Logo() {
 
 function NotFound() {
   return (
-    <div className="bg-card mx-auto my-16 max-w-md rounded-2xl border p-9 text-center shadow-sm">
-      <Compass className="text-muted-foreground mx-auto size-9" />
-      <h2 className="mt-3 text-xl font-semibold">Nothing here</h2>
-      <Button variant="link" asChild><Link to="/">Back to all tools</Link></Button>
+    <div className="px-6 py-28 text-center">
+      <p className="font-display text-7xl font-semibold tracking-[-0.03em]">404</p>
+      <p className="text-muted-foreground mt-3">That page doesn't exist.</p>
+      <Button asChild className="mt-7 rounded-full">
+        <Link to="/">Back to all tools</Link>
+      </Button>
     </div>
   );
 }
@@ -75,64 +77,102 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-card/80 sticky top-0 z-30 flex items-center justify-between border-b px-6 py-3 backdrop-blur-md backdrop-saturate-150">
-        <Link to="/" className="font-display inline-flex items-center gap-2.5 text-xl font-bold tracking-tight">
-          <Logo /> PDFPilot
-          <span className="text-muted-foreground font-sans text-xs font-medium tracking-normal">PDF tools</span>
-        </Link>
+      <header className="sticky top-0 z-40 px-3 pt-3 sm:px-6">
+        <div className="bg-background/80 mx-auto flex max-w-6xl items-center justify-between gap-2 rounded-full border py-1.5 pr-1.5 pl-4 shadow-sm backdrop-blur-md backdrop-saturate-150">
+          <Link to="/" className="font-display inline-flex items-center gap-2 text-lg font-semibold tracking-tight">
+            <Logo /> PDFPilot
+          </Link>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="rounded-full" onClick={flipTheme} aria-label="Toggle dark mode">
-            {theme === "dark" ? <Sun /> : <Moon />}
-          </Button>
+          <div className="flex items-center gap-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="rounded-full">
+                  Tools <ChevronDown className="size-3.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
+                {tools.map((t) => {
+                  const Icon = t.icon;
+                  return (
+                    <DropdownMenuItem key={t.slug} asChild disabled={t.status !== "ready"}>
+                      <Link to={`/${t.slug}`}><Icon /> {t.title}</Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">All tools</Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
-              {tools.map((t) => {
-                const Icon = t.icon;
-                return (
-                  <DropdownMenuItem key={t.slug} asChild disabled={t.status !== "ready"}>
-                    <Link to={`/${t.slug}`}><Icon /> {t.title}</Link>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={flipTheme} aria-label="Toggle dark mode">
+              {theme === "dark" ? <Sun /> : <Moon />}
+            </Button>
+
+            <Button asChild className="hidden rounded-full sm:inline-flex">
+              <Link to="/#tools">Browse tools</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 pt-12 pb-8">
+      <main className="flex-1">
         <ErrorBoundary key={pathname}>
-          <Suspense fallback={<p className="text-muted-foreground text-sm">Loading…</p>}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/unlock" element={<Unlock />} />
-              <Route path="/merge" element={<Merge />} />
-              <Route path="/split" element={<Split />} />
-              <Route path="/rotate" element={<Rotate />} />
-              <Route path="/protect" element={<Protect />} />
-              <Route path="/jpg-to-pdf" element={<JpgToPdf />} />
-              <Route path="/pdf-to-jpg" element={<PdfToJpg />} />
-              <Route path="/watermark" element={<Watermark />} />
-              <Route path="/page-numbers" element={<PageNumbers />} />
-              <Route path="/compress" element={<Compress />} />
-              <Route path="/sign" element={<Sign />} />
-              <Route path="/repair" element={<Repair />} />
-              <Route path="/organize" element={<Organize />} />
-              <Route path="/ocr" element={<Ocr />} />
-              <Route path="/crop" element={<Crop />} />
-              <Route path="/pdf-editor" element={<PdfEditor />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+          <Suspense fallback={<p className="text-muted-foreground px-6 py-20 text-center text-sm">Loading…</p>}>
+            <div className="page-in">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/unlock" element={<Unlock />} />
+                <Route path="/merge" element={<Merge />} />
+                <Route path="/split" element={<Split />} />
+                <Route path="/rotate" element={<Rotate />} />
+                <Route path="/protect" element={<Protect />} />
+                <Route path="/jpg-to-pdf" element={<JpgToPdf />} />
+                <Route path="/pdf-to-jpg" element={<PdfToJpg />} />
+                <Route path="/watermark" element={<Watermark />} />
+                <Route path="/page-numbers" element={<PageNumbers />} />
+                <Route path="/compress" element={<Compress />} />
+                <Route path="/sign" element={<Sign />} />
+                <Route path="/repair" element={<Repair />} />
+                <Route path="/organize" element={<Organize />} />
+                <Route path="/ocr" element={<Ocr />} />
+                <Route path="/crop" element={<Crop />} />
+                <Route path="/pdf-editor" element={<PdfEditor />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
           </Suspense>
         </ErrorBoundary>
       </main>
 
-      <footer className="text-muted-foreground py-7 text-center text-xs">
-        Files stay in your browser. Nothing is uploaded.
+      <footer className="bg-ink text-ink-foreground mt-24">
+        <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
+          <div>
+            <span className="font-display inline-flex items-center gap-2 text-lg font-semibold tracking-tight">
+              <Logo /> PDFPilot
+            </span>
+            <p className="text-ink-foreground/70 mt-3 max-w-xs text-sm leading-relaxed">
+              Every PDF tool, in your browser. Files never leave your device.
+            </p>
+          </div>
+          {categories.map((c) => (
+            <nav key={c.id} aria-label={c.label}>
+              <div className="text-ink-muted text-xs font-semibold tracking-[0.15em] uppercase">{c.label}</div>
+              <ul className="mt-4 space-y-2.5">
+                {tools.filter((t) => t.category === c.id).map((t) => (
+                  <li key={t.slug}>
+                    <Link to={`/${t.slug}`} className="text-ink-foreground/70 hover:text-ink-foreground text-sm transition-colors">
+                      {t.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
+        </div>
+        <div className="border-ink-foreground/10 border-t">
+          <div className="text-ink-muted mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-6 py-6 text-xs">
+            <span>© 2026 PDFPilot · MIT license</span>
+            <span>No uploads. No accounts. No tracking.</span>
+          </div>
+        </div>
       </footer>
 
       <Toaster position="bottom-center" theme={theme as "light" | "dark"} />
