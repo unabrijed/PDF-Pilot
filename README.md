@@ -13,5 +13,7 @@ npm run build    # production build (static, deployable anywhere)
 
 Adding a tool: add an entry in `src/tools/registry.ts` (`status: "ready"`), a component in `src/tools/<slug>/` that reads the workspace and renders `<ResultsActions>`, and a lazy `<Route>` in `src/App.tsx`.
 
+Working on the codebase: [CLAUDE.md](CLAUDE.md) has the invariants and hazards, and [docs/](docs/) covers the [architecture](docs/architecture.md), the [tool contract](docs/tools.md) and the [build and checks](docs/build.md).
+
 ## Pre-push
 `.githooks/pre-push` runs `npm run verify` and blocks the push on failure. It's wired via `git config core.hooksPath .githooks`, re-applied on every `npm install` by the `prepare` script.
