@@ -219,7 +219,7 @@ const SignatureCreator = forwardRef<SignaturePadHandle, { onInk: (has: boolean) 
         </TabsContent>
 
         <TabsContent value="upload">
-          <div className="bg-card rounded-lg border border-dashed p-5 text-center">
+          <div className="surface border-dashed p-5 text-center">
             {uploaded ? (
               <img src={uploaded} alt="Signature" className="mx-auto mb-3 max-h-40 max-w-full" />
             ) : (

@@ -56,7 +56,7 @@ export default function Organize() {
             {order.map((p, idx) => (
               <figure
                 key={p}
-                className="bg-card relative m-0 cursor-grab rounded-lg border p-2 text-center active:cursor-grabbing"
+                className="surface relative m-0 cursor-grab p-2 text-center active:cursor-grabbing"
                 draggable
                 onDragStart={() => { dragFrom.current = idx; }}
                 onDragOver={(e) => e.preventDefault()}
