@@ -26,8 +26,10 @@ export default function FileStaging({ accepts = "pdf" }: { accepts?: FileType })
     <div>
       <div
         className={cn(
-          "bg-card cursor-pointer rounded-xl border-2 border-dashed px-5 py-10 text-center transition-colors",
-          over ? "border-primary bg-accent" : "hover:border-primary hover:bg-accent"
+          "group surface ease-out-quart cursor-pointer rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-[border-color,background-color,box-shadow] duration-300",
+          over
+            ? "border-primary bg-accent shadow-md"
+            : "shadow-xs hover:border-primary/50 hover:bg-accent/50"
         )}
         onClick={() => inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setOver(true); }}
@@ -42,8 +44,15 @@ export default function FileStaging({ accepts = "pdf" }: { accepts?: FileType })
           hidden
           onChange={(e) => { pick(e.target.files); e.target.value = ""; }}
         />
-        <Upload className="text-primary mx-auto size-7" />
-        <div className="mt-3 font-semibold">Drop {kind.label} here, or click to browse</div>
+        <span
+          className={cn(
+            "bg-accent text-primary ease-out-quart mx-auto flex size-14 items-center justify-center rounded-full transition-transform duration-300 group-hover:-translate-y-0.5",
+            over && "scale-110"
+          )}
+        >
+          <Upload className="size-6" />
+        </span>
+        <div className="font-display mt-4 text-lg font-semibold">Drop {kind.label} here, or click to browse</div>
         <div className="text-muted-foreground mt-1 text-sm">
           You can paste with {pasteKey()}V too. Files stay on this device.
         </div>
@@ -57,8 +66,8 @@ export default function FileStaging({ accepts = "pdf" }: { accepts?: FileType })
               <li
                 key={f.id}
                 className={cn(
-                  "flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5",
-                  ok ? "bg-card" : "border-destructive/40 bg-destructive/10 text-destructive"
+                  "flex items-center justify-between gap-3 rounded-lg px-3 py-2.5",
+                  ok ? "surface" : "border-destructive/40 bg-destructive/10 text-destructive border"
                 )}
               >
                 <span className="flex min-w-0 items-center gap-2 text-sm">

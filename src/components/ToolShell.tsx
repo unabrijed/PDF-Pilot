@@ -37,14 +37,14 @@ export default function ToolShell({
   const busyLabel = n > 1 && progress ? `${busy} ${progress}/${n}…` : `${busy}…`;
 
   return (
-    <section className={cn("mx-auto w-full", wide ? "max-w-4xl" : "max-w-2xl")}>
+    <section className={cn("mx-auto w-full px-6 pt-10 pb-16", wide ? "max-w-4xl" : "max-w-2xl")}>
       <ToolHeader slug={slug} sub={sub} />
 
       <FileStaging accepts={tool.accepts} />
 
       {children && <div className="mt-6 space-y-5">{children}</div>}
 
-      <Button size="lg" className="mt-6 w-full" disabled={!n || running || disabled} onClick={start}>
+      <Button size="lg" className="mt-6 w-full rounded-full" disabled={!n || running || disabled} onClick={start}>
         {running && <Loader2 className="animate-spin" />}
         {running ? busyLabel : idleLabel}
       </Button>

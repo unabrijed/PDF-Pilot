@@ -22,14 +22,14 @@ export default function ResultsActions({ items, currentSlug }: { items: NamedByt
   }
 
   return (
-    <div className="bg-card mt-6 rounded-xl border p-4">
+    <div className="surface mt-6 p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <strong className="text-success flex items-center gap-2 text-sm font-semibold">
           <CheckCircle2 className="size-4" />
           {items.length} file{items.length > 1 ? "s" : ""} ready
         </strong>
         {items.length > 1 && (
-          <Button size="sm" onClick={() => download(zipBlob(items), "pdfpilot-results.zip")}>
+          <Button size="sm" className="rounded-full" onClick={() => download(zipBlob(items), "pdfpilot-results.zip")}>
             <FileArchive /> Download all (.zip)
           </Button>
         )}
@@ -39,7 +39,7 @@ export default function ResultsActions({ items, currentSlug }: { items: NamedByt
         {items.map((it, i) => {
           const Icon = mimeOf(it).startsWith("image/") ? Image : FileText;
           return (
-            <li key={i} className="bg-background flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5">
+            <li key={i} className="bg-muted/50 flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
               <span className="flex min-w-0 items-center gap-2 text-sm">
                 <Icon className="text-muted-foreground size-4 shrink-0" />
                 <span className="truncate">{it.name}</span>
@@ -64,7 +64,7 @@ export default function ResultsActions({ items, currentSlug }: { items: NamedByt
             {nexts.map((t) => {
               const Icon = t.icon;
               return (
-                <Button key={t.slug} variant="outline" size="sm" className="rounded-full" onClick={() => continueIn(t.slug)}>
+                <Button key={t.slug} variant="outline" size="sm" className="hover:border-primary/50 hover:bg-accent rounded-full" onClick={() => continueIn(t.slug)}>
                   <Icon /> {t.title}
                 </Button>
               );
