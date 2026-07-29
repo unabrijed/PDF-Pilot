@@ -47,8 +47,8 @@ export default defineConfig({
         name: "PDFPilot PDF tools",
         short_name: "PDFPilot",
         description: "Every PDF tool, entirely in your browser. Nothing uploaded.",
-        theme_color: "#5b3df5",
-        background_color: "#f5f4ef",
+        theme_color: "#2547f4",
+        background_color: "#faf9f6",
         icons: [
           { src: "favicon.svg", sizes: "any", type: "image/svg+xml" },
           { src: "icon-192.png", sizes: "192x192", type: "image/png" },
