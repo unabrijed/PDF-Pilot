@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Bold } from "lucide-react";
 import { dataUrlToBytes } from "../lib/names";
+import ColorPicker from "./ColorPicker";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -40,20 +41,6 @@ function renderType(text: string, font: string, bold: boolean, color: string): s
   ctx.textBaseline = "middle";
   ctx.fillText(t, pad, h / 2);
   return c.toDataURL("image/png");
-}
-
-function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <label className="text-muted-foreground inline-flex items-center gap-2 text-xs">
-      Color
-      <input
-        type="color"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="size-8 cursor-pointer rounded-md border bg-transparent p-0"
-      />
-    </label>
-  );
 }
 
 /**
@@ -223,12 +210,12 @@ const SignatureCreator = forwardRef<SignaturePadHandle, { onInk: (has: boolean) 
             {uploaded ? (
               <img src={uploaded} alt="Signature" className="mx-auto mb-3 max-h-40 max-w-full" />
             ) : (
-              <p className="text-muted-foreground mb-2 text-sm">Pick a PNG or JPG of your signature.</p>
+              <p className="text-muted-foreground mb-2 text-sm">Pick an image of your signature.</p>
             )}
             <Button type="button" variant="outline" size="sm" asChild>
               <label className="cursor-pointer">
                 {uploaded ? "Choose another" : "Choose image"}
-                <input type="file" accept="image/png,image/jpeg" hidden onChange={onUpload} />
+                <input type="file" accept="image/*" hidden onChange={onUpload} />
               </label>
             </Button>
           </div>

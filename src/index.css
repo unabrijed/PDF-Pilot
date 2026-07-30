@@ -126,6 +126,12 @@
   h1, h2, h3 {
     @apply font-display tracking-[-0.02em];
   }
+  /* Tailwind v4's preflight dropped the UA pointer on buttons. Put it back once,
+     here, instead of on every call site. Radix renders its triggers, tabs and
+     toggles as real <button>s, so this covers those too. */
+  button:not(:disabled), [role="button"], label[for], summary {
+    cursor: pointer;
+  }
 }
 
 /* The one shared card treatment. */

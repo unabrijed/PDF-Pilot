@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowLeft, Bold, ChevronDown, ChevronUp, Crop as CropIcon, Image as ImageIcon, Loader2, PenLine, Plus, Trash2 } from "lucide-react";
+import ColorPicker from "../../components/ColorPicker";
 import FileStaging from "../../components/FileStaging";
 import RectSelect from "../../components/RectSelect";
 import ResultsActions from "../../components/ResultsActions";
@@ -316,7 +317,7 @@ export default function PdfEditor() {
             <Button variant="outline" size="sm" className="rounded-full" onClick={() => imgInput.current?.click()}>
               <ImageIcon /> Image
             </Button>
-            <input ref={imgInput} type="file" accept="image/png,image/jpeg" hidden onChange={armImage} />
+            <input ref={imgInput} type="file" accept="image/*" hidden onChange={armImage} />
             <Button
               variant={sigOpen ? "default" : "outline"}
               size="sm"
@@ -441,12 +442,7 @@ export default function PdfEditor() {
                   >
                     <Bold />
                   </Toggle>
-                  <input
-                    type="color"
-                    value={selected.color}
-                    onChange={(e) => patchSel((x) => ({ ...x, color: e.target.value }))}
-                    className="size-9 cursor-pointer rounded-md border bg-transparent p-0"
-                  />
+                  <ColorPicker value={selected.color} onChange={(v) => patchSel((x) => ({ ...x, color: v }))} />
                 </>
               ) : (
                 <Button variant="ghost" size="sm" onClick={() => setCrop({ id: selected.id, rect: null })}>
